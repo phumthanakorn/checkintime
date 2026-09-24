@@ -22,16 +22,7 @@
     </div>
 
     <!-- ช่วงวันที่ -->
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <span class="mb-2 block text-sm font-medium text-ink">วันที่เริ่ม</span>
-        <DateField v-model="form.startDate" aria-label="วันที่เริ่มลา" />
-      </div>
-      <div>
-        <span class="mb-2 block text-sm font-medium text-ink">ถึงวันที่</span>
-        <DateField v-model="form.endDate" :min="form.startDate" aria-label="วันที่สิ้นสุดการลา" />
-      </div>
-    </div>
+    <DateRangeField v-model:start="form.startDate" v-model:end="form.endDate" title="เลือกวันลา" />
 
     <!-- ช่วงเวลา (เลือกครึ่งวันได้เมื่อลาวันเดียว) -->
     <div v-if="isSingleDay">
@@ -67,7 +58,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import SegmentedTabs from '@/components/common/SegmentedTabs.vue'
-import DateField from '@/components/common/DateField.vue'
+import DateRangeField from '@/components/common/DateRangeField.vue'
 import { LEAVE_PERIOD_LABELS, LEAVE_PERIODS, LEAVE_TYPE_META, LEAVE_TYPES } from '@/utils/constants'
 import { countWeekdays } from '@/utils/dates'
 import { formatLeaveDays, toDateKey } from '@/utils/formatters'
