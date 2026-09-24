@@ -8,7 +8,7 @@
           aria-label="ตั้งค่า"
           @click="comingSoon"
         >
-          <v-icon icon="mdi-cog-outline" size="22" />
+          <AppIcon name="gear" :size="22" />
         </button>
       </template>
     </PageHeader>
@@ -24,7 +24,7 @@
       class="flex w-full items-center justify-center gap-2 rounded-2xl bg-card py-3.5 text-sm font-semibold text-status-outside shadow-sm transition active:scale-[0.99]"
       @click="confirmLogout = true"
     >
-      <v-icon icon="mdi-logout" size="20" />
+      <AppIcon name="sign-out" :size="20" />
       ออกจากระบบ
     </button>
 
@@ -76,7 +76,7 @@ const workMenu = [
     key: 'payslip',
     label: 'สลิปเงินเดือน',
     description: 'ดูและดาวน์โหลดสลิปย้อนหลัง',
-    icon: 'mdi-file-document-outline',
+    icon: 'file-text',
     bg: 'bg-metric-blue/10',
     color: 'text-metric-blue',
   },
@@ -84,7 +84,7 @@ const workMenu = [
     key: 'history',
     label: 'ประวัติการลงเวลา',
     description: 'เวลาเข้า-ออกงานรายวัน',
-    icon: 'mdi-history',
+    icon: 'history',
     bg: 'bg-violet-50',
     color: 'text-violet-500',
   },
@@ -92,7 +92,7 @@ const workMenu = [
     key: 'time-fix',
     label: 'ขอลงเวลาย้อนหลัง',
     description: 'กรณีลืมลงเวลาเข้า-ออกงาน',
-    icon: 'mdi-clock-edit-outline',
+    icon: 'clock-edit',
     bg: 'bg-violet-50',
     color: 'text-violet-500',
   },
@@ -100,7 +100,7 @@ const workMenu = [
     key: 'advance',
     label: 'คำขอเบิกเงิน',
     description: FEATURES.ADVANCE_REQUEST ? 'ยื่นและติดตามสถานะการเบิก' : 'ยังไม่เปิดให้บริการ',
-    icon: 'mdi-wallet-outline',
+    icon: 'wallet',
     bg: 'bg-metric-cyan/10',
     color: 'text-metric-cyan',
     disabled: !FEATURES.ADVANCE_REQUEST,
@@ -111,14 +111,14 @@ const accountMenu = computed(() => [
   {
     key: 'personal',
     label: 'ข้อมูลส่วนตัว',
-    icon: 'mdi-account-outline',
+    icon: 'user',
     bg: 'bg-status-checkin/10',
     color: 'text-status-checkin',
   },
   {
     key: 'password',
     label: 'เปลี่ยนรหัสผ่าน',
-    icon: 'mdi-lock-outline',
+    icon: 'lock',
     bg: 'bg-status-checkout/10',
     color: 'text-status-checkout',
   },
@@ -126,7 +126,7 @@ const accountMenu = computed(() => [
     key: 'biometric',
     label: 'PIN / Biometric',
     description: 'เข้าสู่ระบบด้วยลายนิ้วมือหรือ PIN',
-    icon: 'mdi-fingerprint',
+    icon: 'fingerprint',
     bg: 'bg-status-checkin/10',
     color: 'text-status-checkin',
   },
@@ -134,7 +134,7 @@ const accountMenu = computed(() => [
     key: 'notifications',
     label: 'การแจ้งเตือน',
     description: 'เตือนเวลาเข้า-ออกงาน',
-    icon: 'mdi-bell-outline',
+    icon: 'bell',
     bg: 'bg-rose-50',
     color: 'text-rose-500',
     switch: notificationsOn.value,
@@ -145,7 +145,7 @@ const helpMenu = [
   {
     key: 'contact-hr',
     label: 'ติดต่อฝ่ายบุคคล (HR)',
-    icon: 'mdi-phone-outline',
+    icon: 'phone',
     bg: 'bg-status-checkin/10',
     color: 'text-status-checkin',
     value: HR_CONTACT_PHONE,
@@ -153,7 +153,7 @@ const helpMenu = [
   {
     key: 'privacy',
     label: 'นโยบายความเป็นส่วนตัว (PDPA)',
-    icon: 'mdi-shield-check-outline',
+    icon: 'shield-check',
     bg: 'bg-slate-100',
     color: 'text-status-done',
   },

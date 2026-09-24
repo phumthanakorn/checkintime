@@ -6,11 +6,11 @@
       aria-label="เดือนก่อนหน้า"
       @click="month = shiftMonth(month, -1)"
     >
-      <v-icon icon="mdi-chevron-left" size="22" />
+      <AppIcon name="caret-left" :size="22" />
     </button>
 
     <span class="flex items-center gap-2 text-sm font-semibold text-ink">
-      <v-icon icon="mdi-calendar-month-outline" size="18" class="text-ink-muted" />
+      <AppIcon name="calendar" :size="18" class="text-ink-muted" />
       {{ formatMonth(month) }}
     </span>
 
@@ -21,7 +21,7 @@
       :disabled="isLatest"
       @click="month = shiftMonth(month, 1)"
     >
-      <v-icon icon="mdi-chevron-right" size="22" />
+      <AppIcon name="caret-right" :size="22" />
     </button>
   </div>
 </template>

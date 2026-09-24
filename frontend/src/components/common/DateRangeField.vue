@@ -9,7 +9,7 @@
         :class="open ? 'border-status-checkin bg-card' : 'border-slate-200'"
         @click="openPicker"
       >
-        <v-icon :icon="field.icon" size="18" class="text-ink-muted" />
+        <AppIcon :name="field.icon" :size="18" class="text-ink-muted" />
         <span class="truncate text-sm" :class="field.value ? 'text-ink' : 'text-slate-400'">
           {{ field.value ? formatDayMonth(field.value, true) : 'เลือกวันที่' }}
         </span>
@@ -24,7 +24,7 @@
         <p class="text-[11px] text-ink-muted">วันที่เริ่ม</p>
         <p class="text-sm font-semibold text-ink">{{ draft[0] ? formatDayMonth(draft[0], true) : '-' }}</p>
       </div>
-      <v-icon icon="mdi-arrow-right" size="18" class="text-ink-muted" />
+      <AppIcon name="arrow-right" :size="18" class="text-ink-muted" />
       <div class="text-center" :class="draft[0] && !draft[1] && 'rounded-xl py-1 ring-2 ring-status-checkin/40'">
         <p class="text-[11px] text-ink-muted">ถึงวันที่</p>
         <p class="text-sm font-semibold" :class="draft[1] ? 'text-ink' : 'text-slate-400'">
@@ -77,8 +77,8 @@ const open = ref(false)
 const draft = ref([null, null])
 
 const fields = computed(() => [
-  { label: 'วันที่เริ่ม', value: start.value, icon: 'mdi-calendar-start-outline' },
-  { label: 'ถึงวันที่', value: end.value, icon: 'mdi-calendar-end-outline' },
+  { label: 'วันที่เริ่ม', value: start.value, icon: 'calendar-dots' },
+  { label: 'ถึงวันที่', value: end.value, icon: 'calendar-check' },
 ])
 
 const workdays = computed(() => (draft.value[0] && draft.value[1] ? countWeekdays(draft.value[0], draft.value[1]) : 0))

@@ -2,7 +2,7 @@
   <!-- แถบสลับสถานะการ์ดลงเวลา สำหรับดู UI (แสดงเฉพาะตอน dev / mock) -->
   <section class="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-3">
     <p class="mb-2 flex items-center gap-1 text-xs font-medium text-slate-500">
-      <v-icon icon="mdi-eye-outline" size="16" />
+      <AppIcon name="eye" :size="16" />
       ดูตัวอย่างสถานะ (UI)
     </p>
     <div class="grid grid-cols-5 gap-1.5">
@@ -20,7 +20,7 @@
     </div>
 
     <p class="mb-2 mt-3 flex items-center gap-1 text-xs font-medium text-slate-500">
-      <v-icon icon="mdi-party-popper" size="16" />
+      <AppIcon name="confetti" :size="16" />
       ดูหน้าจอฉลอง
     </p>
     <div class="grid grid-cols-3 gap-1.5">

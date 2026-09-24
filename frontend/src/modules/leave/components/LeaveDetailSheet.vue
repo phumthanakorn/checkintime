@@ -3,7 +3,7 @@
     <template v-if="request">
       <div class="flex items-center gap-3">
         <span class="flex h-12 w-12 items-center justify-center rounded-2xl" :class="meta.bg">
-          <v-icon :icon="meta.icon" size="24" :class="meta.color" />
+          <AppIcon :name="meta.icon" :size="24" weight="duotone" :class="meta.color" />
         </span>
         <div class="min-w-0 flex-1">
           <p class="text-base font-bold text-ink">{{ meta.label }}</p>
@@ -25,7 +25,7 @@
         v-if="request.reviewNote"
         class="mt-3 flex gap-2 rounded-2xl bg-status-outside/10 p-3 text-xs text-status-outside"
       >
-        <v-icon icon="mdi-message-reply-text-outline" size="16" />
+        <AppIcon name="chat" :size="16" />
         <span><b>หมายเหตุจากหัวหน้า:</b> {{ request.reviewNote }}</span>
       </div>
     </template>
@@ -37,9 +37,9 @@
         :disabled="loading"
         @click="emit('cancel', request)"
       >
-        <v-progress-circular v-if="loading" indeterminate size="18" width="2" />
+        <LoadingDots v-if="loading" size="sm" />
         <template v-else>
-          <v-icon icon="mdi-close-circle-outline" size="18" />
+          <AppIcon name="x-circle" :size="18" />
           ยกเลิกคำขอลา
         </template>
       </button>

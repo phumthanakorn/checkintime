@@ -16,7 +16,7 @@
         <TimeField
           v-model="form.checkIn"
           title="เวลาเข้างาน"
-          icon="mdi-login"
+          icon="sign-in"
           :default-time="WORK_START_TIME"
           :shortcuts="['08:00', '08:30', '09:00']"
         />
@@ -26,7 +26,7 @@
         <TimeField
           v-model="form.checkOut"
           title="เวลาออกงาน"
-          icon="mdi-logout"
+          icon="sign-out"
           :default-time="WORK_END_TIME"
           :shortcuts="['17:30', '18:00', '18:30', '19:00']"
         />
@@ -66,12 +66,12 @@
     />
 
     <p class="flex items-start gap-1.5 rounded-2xl bg-metric-blue/10 px-3 py-2.5 text-xs text-metric-blue">
-      <v-icon icon="mdi-information-outline" size="16" />
+      <AppIcon name="info" :size="16" />
       คำขอจะส่งให้หัวหน้าอนุมัติ เมื่ออนุมัติแล้วเวลาจะถูกบันทึกในประวัติของคุณ
     </p>
 
     <p v-if="error" class="flex items-center gap-1 text-xs text-status-outside">
-      <v-icon icon="mdi-alert-circle-outline" size="16" />
+      <AppIcon name="warning-circle" :size="16" />
       {{ error }}
     </p>
   </form>

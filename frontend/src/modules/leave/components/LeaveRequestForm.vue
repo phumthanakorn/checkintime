@@ -13,7 +13,7 @@
           @click="form.leaveType = option.type"
         >
           <span class="flex h-9 w-9 items-center justify-center rounded-full" :class="option.meta.bg">
-            <v-icon :icon="option.meta.icon" size="18" :class="option.meta.color" />
+            <AppIcon :name="option.meta.icon" :size="18" weight="duotone" :class="option.meta.color" />
           </span>
           <span class="text-xs font-semibold text-ink">{{ option.meta.label }}</span>
           <span class="text-[10px] text-ink-muted">เหลือ {{ option.available }} วัน</span>
@@ -58,7 +58,7 @@
     </div>
 
     <p v-if="error" class="flex items-center gap-1 text-xs text-status-outside">
-      <v-icon icon="mdi-alert-circle-outline" size="16" />
+      <AppIcon name="warning-circle" :size="16" />
       {{ error }}
     </p>
   </form>

@@ -3,7 +3,7 @@
     <div
       class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-status-checkin text-white shadow-lg shadow-emerald-500/30"
     >
-      <v-icon icon="mdi-clock-outline" size="34" />
+      <AppIcon name="clock" :size="34" />
     </div>
     <h1 class="text-2xl font-bold text-ink">เข้าสู่ระบบ</h1>
     <p class="mt-1 text-[13px] text-ink-muted">ระบบลงเวลาทำงานและจัดการกะงานพนักงาน</p>
@@ -29,7 +29,7 @@
         LINE Official
       </button>
       <button class="alt-btn" type="button" @click="comingSoon">
-        <v-icon icon="mdi-fingerprint" size="20" class="text-emerald-600" />
+        <AppIcon name="fingerprint" :size="20" class="text-emerald-600" />
         PIN / Biometric
       </button>
     </div>
@@ -38,7 +38,7 @@
   <div
     class="mt-6 flex items-center justify-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-center text-xs text-emerald-700"
   >
-    <v-icon icon="mdi-shield-check" size="16" />
+    <AppIcon name="shield-check" :size="16" />
     ระบบปลอดภัยตามมาตรฐานความปลอดภัยข้อมูลพนักงาน (PDPA)
   </div>
 

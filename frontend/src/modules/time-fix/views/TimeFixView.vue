@@ -7,7 +7,7 @@
           class="flex h-10 items-center gap-1 rounded-full bg-status-checkin px-4 text-sm font-semibold text-white shadow-md shadow-status-checkin/30"
           @click="openForm()"
         >
-          <v-icon icon="mdi-plus" size="18" />
+          <AppIcon name="plus" :size="18" />
           ขอลงเวลา
         </button>
       </template>
@@ -15,7 +15,7 @@
 
     <div class="flex items-start gap-3 rounded-2xl bg-card p-4 shadow-sm">
       <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50">
-        <v-icon icon="mdi-clock-edit-outline" size="20" class="text-violet-500" />
+        <AppIcon name="clock-edit" :size="20" weight="duotone" class="text-violet-500" />
       </span>
       <p class="text-xs leading-relaxed text-ink-muted">
         ลืมกดเข้างานหรือออกงาน? ส่งคำขอพร้อมเวลาจริงและเหตุผล หัวหน้าจะเป็นผู้อนุมัติ
@@ -27,11 +27,11 @@
       <h2 class="text-base font-bold text-ink">คำขอของฉัน</h2>
       <SegmentedTabs v-model="filter" :options="filterOptions" />
 
-      <LoadingSpinner v-if="timeFix.loading && !timeFix.requests.length" text="กำลังโหลด..." />
+      <LoadingState v-if="timeFix.loading && !timeFix.requests.length" />
 
       <EmptyState
         v-else-if="!filteredRequests.length"
-        icon="mdi-clock-check-outline"
+        icon="clock"
         title="ไม่มีคำขอ"
         description="กด “ขอลงเวลา” เมื่อลืมลงเวลาเข้า-ออกงาน"
       />
@@ -52,10 +52,10 @@
         class="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-status-checkin font-semibold text-white shadow-lg shadow-status-checkin/30 disabled:opacity-70"
         :disabled="timeFix.submitting"
       >
-        <v-progress-circular v-if="timeFix.submitting" indeterminate size="20" width="2" />
+        <LoadingDots v-if="timeFix.submitting" />
         <template v-else>
           ส่งคำขอ
-          <v-icon icon="mdi-send" size="18" />
+          <AppIcon name="send" :size="18" />
         </template>
       </button>
     </template>
@@ -87,7 +87,7 @@ import PageHeader from '@/components/layout/PageHeader.vue'
 import SegmentedTabs from '@/components/common/SegmentedTabs.vue'
 import AppBottomSheet from '@/components/common/AppBottomSheet.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import LoadingSpinner from '@/components/feedback/LoadingSpinner.vue'
+import LoadingState from '@/components/feedback/LoadingState.vue'
 import EmptyState from '@/components/feedback/EmptyState.vue'
 import TimeFixForm from '../components/TimeFixForm.vue'
 import TimeFixItem from '../components/TimeFixItem.vue'

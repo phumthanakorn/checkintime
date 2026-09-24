@@ -1,6 +1,6 @@
 <template>
   <v-btn v-bind="$attrs" :color="color" :variant="variant" :loading="loading">
-    <v-icon v-if="icon" start :icon="icon" />
+    <AppIcon v-if="icon" :name="icon" class="mr-1.5" />
     <slot />
   </v-btn>
 </template>

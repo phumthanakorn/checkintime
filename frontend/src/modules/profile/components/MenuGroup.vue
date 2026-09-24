@@ -14,7 +14,7 @@
           class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
           :class="item.disabled ? 'bg-slate-100' : item.bg"
         >
-          <v-icon :icon="item.icon" size="20" :class="item.disabled ? 'text-slate-400' : item.color" />
+          <AppIcon :name="item.icon" :size="20" weight="duotone" :class="item.disabled ? 'text-slate-400' : item.color" />
         </span>
 
         <span class="min-w-0 flex-1">
@@ -45,7 +45,7 @@
         >
           เร็ว ๆ นี้
         </span>
-        <v-icon v-else icon="mdi-chevron-right" size="20" class="text-slate-300" />
+        <AppIcon v-else name="caret-right" :size="20" class="text-slate-300" />
       </component>
     </div>
   </section>

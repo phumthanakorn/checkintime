@@ -6,7 +6,7 @@
       class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card text-ink no-underline shadow-sm"
       aria-label="ย้อนกลับ"
     >
-      <v-icon icon="mdi-chevron-left" size="24" />
+      <AppIcon name="caret-left" :size="24" />
     </router-link>
     <div class="min-w-0 flex-1">
       <h1 class="truncate text-xl font-bold text-ink">{{ title }}</h1>

@@ -17,7 +17,7 @@
       >
         <img v-if="isImage(file.type)" :src="file.dataUrl" :alt="file.name" class="h-full w-full object-cover" />
         <div v-else class="flex h-full flex-col items-center justify-center gap-1 p-2 text-center">
-          <v-icon icon="mdi-file-pdf-box" size="32" class="text-status-outside" />
+          <AppIcon name="file-pdf" :size="32" class="text-status-outside" />
           <span class="line-clamp-2 break-all text-[10px] leading-tight text-ink">{{ file.name }}</span>
         </div>
         <span class="absolute bottom-1 left-1 rounded-full bg-ink/60 px-1.5 py-0.5 font-display text-[9px] text-white">
@@ -29,7 +29,7 @@
           :aria-label="`ลบไฟล์ ${file.name}`"
           @click="remove(index)"
         >
-          <v-icon icon="mdi-close" size="14" />
+          <AppIcon name="x" :size="14" />
         </button>
       </div>
 
@@ -39,9 +39,9 @@
         class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-slate-200 bg-app-bg text-ink-muted transition hover:border-status-checkin hover:text-status-checkin"
         :class="processing && 'pointer-events-none opacity-60'"
       >
-        <v-progress-circular v-if="processing" indeterminate size="22" width="2" />
+        <LoadingDots v-if="processing" size="sm" class="text-status-checkin" />
         <template v-else>
-          <v-icon icon="mdi-paperclip" size="24" />
+          <AppIcon name="paperclip" :size="24" />
           <span class="text-[11px] font-medium">แนบไฟล์</span>
         </template>
         <input
@@ -59,7 +59,7 @@
       {{ hint || `รูปภาพหรือ PDF ไม่เกิน ${maxSizeMb} MB ต่อไฟล์ · ถ่ายรูปจากกล้องมือถือได้` }}
     </p>
     <p v-if="error" class="mt-1 flex items-center gap-1 text-xs text-status-outside">
-      <v-icon icon="mdi-alert-circle-outline" size="14" />
+      <AppIcon name="warning-circle" :size="14" />
       {{ error }}
     </p>
   </div>

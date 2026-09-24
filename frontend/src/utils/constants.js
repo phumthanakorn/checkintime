@@ -52,21 +52,21 @@ export const LEAVE_TYPES = {
 export const LEAVE_TYPE_META = {
   [LEAVE_TYPES.VACATION]: {
     label: 'ลาพักร้อน',
-    icon: 'mdi-beach',
+    icon: 'island',
     bg: 'bg-metric-blue/10',
     color: 'text-metric-blue',
     bar: 'bg-metric-blue',
   },
   [LEAVE_TYPES.PERSONAL]: {
     label: 'ลากิจ',
-    icon: 'mdi-briefcase-outline',
+    icon: 'briefcase',
     bg: 'bg-violet-50',
     color: 'text-violet-500',
     bar: 'bg-violet-500',
   },
   [LEAVE_TYPES.SICK]: {
     label: 'ลาป่วย',
-    icon: 'mdi-medical-bag',
+    icon: 'first-aid',
     bg: 'bg-rose-50',
     color: 'text-rose-500',
     bar: 'bg-rose-500',

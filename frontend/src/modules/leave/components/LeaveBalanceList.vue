@@ -2,7 +2,7 @@
   <section class="grid grid-cols-3 gap-2.5">
     <div v-for="item in items" :key="item.type" class="rounded-2xl bg-card p-3 shadow-sm">
       <span class="flex h-8 w-8 items-center justify-center rounded-full" :class="item.meta.bg">
-        <v-icon :icon="item.meta.icon" size="16" :class="item.meta.color" />
+        <AppIcon :name="item.meta.icon" :size="16" weight="duotone" :class="item.meta.color" />
       </span>
       <p class="mt-2 text-xs text-ink-muted">{{ item.meta.label }}</p>
       <p class="flex items-baseline gap-1">

@@ -6,7 +6,7 @@
     :aria-label="ariaLabel"
     @click="openPicker"
   >
-    <v-icon :icon="icon" size="18" class="text-ink-muted" />
+    <AppIcon :name="icon" :size="18" class="text-ink-muted" />
     <span class="font-display text-sm" :class="model ? 'font-semibold text-ink' : 'font-normal text-slate-400'">
       {{ model ? `${model} น.` : placeholder }}
     </span>
@@ -53,7 +53,7 @@ const model = defineModel({ type: String, default: '' })
 const props = defineProps({
   title: { type: String, default: 'เลือกเวลา' },
   placeholder: { type: String, default: 'เลือกเวลา' },
-  icon: { type: String, default: 'mdi-clock-outline' },
+  icon: { type: String, default: 'clock' },
   /** เวลาที่ใช้เมื่อยังไม่มีค่า */
   defaultTime: { type: String, default: '09:00' },
   /** ปุ่มลัด เช่น ['09:00', '18:00'] */

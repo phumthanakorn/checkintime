@@ -18,7 +18,11 @@
         </button>
       </template>
       <v-list density="compact" min-width="180">
-        <v-list-item prepend-icon="mdi-logout" title="ออกจากระบบ" @click="logout" />
+        <v-list-item title="ออกจากระบบ" @click="logout">
+          <template #prepend>
+            <AppIcon name="sign-out" class="mr-3 text-ink-muted" />
+          </template>
+        </v-list-item>
       </v-list>
     </v-menu>
 
@@ -32,7 +36,7 @@
       class="flex h-10 w-10 items-center justify-center rounded-full bg-card text-ink shadow-sm"
       aria-label="การแจ้งเตือน"
     >
-      <v-icon icon="mdi-bell-outline" size="22" />
+      <AppIcon name="bell" :size="22" />
     </button>
   </header>
 </template>

@@ -11,7 +11,7 @@
         <li v-for="(step, index) in steps" :key="step.label" class="flex gap-3">
           <span class="flex flex-col items-center">
             <span class="flex h-9 w-9 items-center justify-center rounded-full" :class="step.bg">
-              <v-icon :icon="step.icon" size="18" :class="step.color" />
+              <AppIcon :name="step.icon" :size="18" weight="duotone" :class="step.color" />
             </span>
             <span v-if="index < steps.length - 1" class="my-1 w-px flex-1 bg-slate-200" />
           </span>
@@ -19,7 +19,7 @@
             <span class="block text-xs text-ink-muted">{{ step.label }}</span>
             <span class="block font-display text-lg font-bold text-ink">{{ formatClock(step.time) }}</span>
             <span class="flex items-center gap-1 text-xs text-ink-muted">
-              <v-icon icon="mdi-map-marker-outline" size="14" />
+              <AppIcon name="map-pin" :size="14" />
               {{ formatLocation(step.location) }}
             </span>
           </span>
@@ -41,7 +41,7 @@
         class="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-metric-blue/10 text-sm font-semibold text-metric-blue"
         @click="emit('request-fix', record)"
       >
-        <v-icon icon="mdi-timer-sand" size="18" />
+        <AppIcon name="hourglass" :size="18" />
         มีคำขอแก้ไขรออนุมัติ · ดูคำขอ
       </button>
       <button
@@ -50,7 +50,7 @@
         class="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-status-checkin text-sm font-semibold text-white shadow-lg shadow-status-checkin/30"
         @click="emit('request-fix', record)"
       >
-        <v-icon icon="mdi-clock-edit-outline" size="18" />
+        <AppIcon name="clock-edit" :size="18" />
         ขอลงเวลาออกย้อนหลัง
       </button>
       <button
@@ -59,7 +59,7 @@
         class="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 text-sm font-semibold text-ink"
         @click="emit('request-fix', record)"
       >
-        <v-icon icon="mdi-pencil-outline" size="18" />
+        <AppIcon name="pencil" :size="18" />
         แจ้งแก้ไขเวลา
       </button>
     </template>
@@ -86,7 +86,7 @@ const steps = computed(() => [
     label: 'เข้างาน',
     time: props.record?.checkIn,
     location: props.record?.checkInLocation,
-    icon: 'mdi-login',
+    icon: 'sign-in',
     bg: 'bg-status-checkin/10',
     color: 'text-status-checkin',
   },
@@ -94,7 +94,7 @@ const steps = computed(() => [
     label: 'ออกงาน',
     time: props.record?.checkOut,
     location: props.record?.checkOutLocation,
-    icon: 'mdi-logout',
+    icon: 'sign-out',
     bg: 'bg-status-checkout/10',
     color: 'text-status-checkout',
   },

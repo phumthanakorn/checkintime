@@ -3,7 +3,7 @@
     <div>
       <label for="username" class="mb-2 block text-sm font-medium text-ink">รหัสพนักงาน หรือ อีเมล</label>
       <div class="field" :class="{ 'field--error': errors.username }">
-        <v-icon icon="mdi-account-outline" size="20" class="text-slate-400" />
+        <AppIcon name="user" :size="20" class="text-slate-400" />
         <input
           id="username"
           v-model.trim="form.username"
@@ -18,7 +18,7 @@
     <div>
       <label for="password" class="mb-2 block text-sm font-medium text-ink">รหัสผ่าน</label>
       <div class="field" :class="{ 'field--error': errors.password }">
-        <v-icon icon="mdi-lock-open-outline" size="20" class="text-slate-400" />
+        <AppIcon name="lock-open" :size="20" class="text-slate-400" />
         <input
           id="password"
           v-model="form.password"
@@ -32,7 +32,7 @@
           :aria-label="showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'"
           @click="showPassword = !showPassword"
         >
-          <v-icon :icon="showPassword ? 'mdi-eye-off-outline' : 'mdi-eye-outline'" size="20" />
+          <AppIcon :name="showPassword ? 'eye-slash' : 'eye'" :size="20" />
         </button>
       </div>
       <p v-if="errors.password" class="mt-1 text-xs text-red-500">{{ errors.password }}</p>
@@ -51,10 +51,10 @@
       :disabled="loading"
       class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-status-checkin font-semibold text-white shadow-lg shadow-status-checkin/30 transition hover:brightness-95 disabled:opacity-70"
     >
-      <v-progress-circular v-if="loading" indeterminate size="20" width="2" />
+      <LoadingDots v-if="loading" />
       <template v-else>
         เข้าสู่ระบบ
-        <v-icon icon="mdi-arrow-right" size="20" />
+        <AppIcon name="arrow-right" :size="20" />
       </template>
     </button>
   </form>

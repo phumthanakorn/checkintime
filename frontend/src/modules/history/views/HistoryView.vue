@@ -6,7 +6,7 @@
           :to="{ name: 'time-fix' }"
           class="flex h-10 items-center gap-1 rounded-full bg-card px-3.5 text-xs font-semibold text-ink no-underline shadow-sm"
         >
-          <v-icon icon="mdi-clock-edit-outline" size="18" class="text-violet-500" />
+          <AppIcon name="clock-edit" :size="18" weight="duotone" class="text-violet-500" />
           ขอลงเวลา
         </router-link>
       </template>
@@ -22,22 +22,22 @@
       @click="requestFix(incompleteDays[incompleteDays.length - 1])"
     >
       <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-status-outside text-white">
-        <v-icon icon="mdi-alert-outline" size="20" />
+        <AppIcon name="warning" :size="20" />
       </span>
       <span class="min-w-0 flex-1">
         <span class="block text-sm font-semibold text-ink">ลงเวลาไม่ครบ {{ incompleteDays.length }} วัน</span>
         <span class="block text-xs text-ink-muted">แตะเพื่อขอลงเวลาย้อนหลัง ก่อนสรุปเงินเดือน</span>
       </span>
-      <v-icon icon="mdi-chevron-right" class="text-status-outside" />
+      <AppIcon name="caret-right" class="text-status-outside" />
     </button>
 
     <HistorySummary :records="workedRecords" />
 
-    <LoadingSpinner v-if="attendance.loadingHistory" text="กำลังโหลด..." />
+    <LoadingState v-if="attendance.loadingHistory" />
 
     <EmptyState
       v-else-if="!attendance.history.length"
-      icon="mdi-calendar-blank-outline"
+      icon="calendar"
       title="ไม่มีข้อมูลการลงเวลา"
       :description="`ยังไม่มีการลงเวลาในเดือน${formatMonth(month)}`"
     />
@@ -55,7 +55,7 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import MonthSwitcher from '@/components/common/MonthSwitcher.vue'
-import LoadingSpinner from '@/components/feedback/LoadingSpinner.vue'
+import LoadingState from '@/components/feedback/LoadingState.vue'
 import EmptyState from '@/components/feedback/EmptyState.vue'
 import HistorySummary from '../components/HistorySummary.vue'
 import HistoryItem from '../components/HistoryItem.vue'

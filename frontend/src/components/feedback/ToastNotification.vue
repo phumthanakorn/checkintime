@@ -11,7 +11,14 @@
   >
     {{ current.message }}
     <template #actions>
-      <v-btn icon="mdi-close" variant="text" size="small" @click="app.removeToast(current.id)" />
+      <button
+        type="button"
+        class="flex h-8 w-8 items-center justify-center rounded-full text-white/90 hover:bg-white/15"
+        aria-label="ปิด"
+        @click="app.removeToast(current.id)"
+      >
+        <AppIcon name="x" :size="18" />
+      </button>
     </template>
   </v-snackbar>
 </template>

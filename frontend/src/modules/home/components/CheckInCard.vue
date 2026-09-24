@@ -18,7 +18,7 @@
           v-if="config.actionable && !loading"
           class="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-medium"
         >
-          <v-icon icon="mdi-gesture-tap-hold" size="14" />
+          <AppIcon name="hand-tap" :size="14" />
           แตะค้างไว้เพื่อลงเวลา
         </p>
       </div>
@@ -62,15 +62,15 @@
           @keyup.enter.space.prevent="cancel"
           @contextmenu.prevent
         >
-          <v-progress-circular v-if="loading" indeterminate :class="config.text" size="40" width="3" />
+          <LoadingDots v-if="loading" size="lg" class="h-12" :class="config.text" />
           <span
             v-else-if="config.iconBg"
             class="flex h-12 w-12 items-center justify-center rounded-full text-white transition-transform duration-150"
             :class="[config.iconBg, holding && 'scale-110']"
           >
-            <v-icon :icon="config.icon" size="26" />
+            <AppIcon :name="config.icon" :size="26" weight="bold" />
           </span>
-          <v-icon v-else :icon="config.icon" size="46" :class="config.text" />
+          <AppIcon v-else :name="config.icon" :size="46" weight="fill" :class="config.text" />
           <span class="whitespace-pre-line text-center text-xs font-semibold leading-tight" :class="config.text">
             {{ loading ? 'กำลังบันทึก...' : holding ? 'ค้างไว้...' : config.label }}
           </span>
@@ -100,7 +100,7 @@ const STATE_CONFIG = {
     card: 'bg-status-checkin shadow-status-checkin/30',
     iconBg: 'bg-status-checkin',
     text: 'text-status-checkin',
-    icon: 'mdi-check',
+    icon: 'check',
     label: 'กดเข้างาน',
     actionable: true,
   },
@@ -108,7 +108,7 @@ const STATE_CONFIG = {
     card: 'bg-status-checkout shadow-status-checkout/30',
     iconBg: 'bg-status-checkout',
     text: 'text-status-checkout',
-    icon: 'mdi-logout',
+    icon: 'sign-out',
     label: 'กดออกงาน',
     actionable: true,
   },
@@ -116,7 +116,7 @@ const STATE_CONFIG = {
     card: 'bg-status-done shadow-status-done/30',
     iconBg: null,
     text: 'text-status-checkin',
-    icon: 'mdi-check-decagram',
+    icon: 'seal-check',
     label: 'เช็คอินครบแล้ว\nสำหรับวันนี้',
     actionable: false,
   },
@@ -124,7 +124,7 @@ const STATE_CONFIG = {
     card: 'bg-status-outside shadow-status-outside/30',
     iconBg: 'bg-status-outside',
     text: 'text-status-outside',
-    icon: 'mdi-map-marker',
+    icon: 'map-pin',
     label: 'อยู่นอกพื้นที่',
     actionable: false,
   },

@@ -8,7 +8,7 @@
         :class="[index % 2 === 0 && 'border-r border-slate-100', index < 2 && 'border-b border-slate-100']"
       >
         <span class="flex h-9 w-9 items-center justify-center rounded-full" :class="item.bg">
-          <v-icon :icon="item.icon" size="18" :class="item.color" />
+          <AppIcon :name="item.icon" :size="18" weight="duotone" :class="item.color" />
         </span>
         <span class="text-[13px] text-ink-muted">{{ item.label }}</span>
         <!-- Stat Display: ตัวเลข Plus Jakarta 24px / 700 + หน่วย Prompt -->
@@ -34,7 +34,7 @@ const items = computed(() => [
     label: 'วันลาคงเหลือ',
     value: props.summary.leaveRemainingDays,
     unit: 'วัน',
-    icon: 'mdi-calendar-blank',
+    icon: 'calendar',
     bg: 'bg-metric-blue/10',
     color: 'text-metric-blue',
   },
@@ -42,7 +42,7 @@ const items = computed(() => [
     label: 'มาสาย (ครั้ง)',
     value: props.summary.lateCount,
     unit: 'ครั้ง',
-    icon: 'mdi-alarm',
+    icon: 'alarm',
     bg: 'bg-rose-50',
     color: 'text-rose-500',
   },
@@ -50,7 +50,7 @@ const items = computed(() => [
     label: 'มาสาย (รวม)',
     value: props.summary.lateMinutes,
     unit: 'นาที',
-    icon: 'mdi-clock-outline',
+    icon: 'clock',
     bg: 'bg-violet-50',
     color: 'text-violet-500',
   },
@@ -58,7 +58,7 @@ const items = computed(() => [
     label: 'OT (เดือนนี้)',
     value: props.summary.otMinutes,
     unit: 'นาที',
-    icon: 'mdi-timer-outline',
+    icon: 'timer',
     bg: 'bg-metric-cyan/10',
     color: 'text-metric-cyan',
   },

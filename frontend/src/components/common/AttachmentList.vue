@@ -1,7 +1,7 @@
 <template>
   <div v-if="files?.length">
     <p class="mb-2 flex items-center gap-1 text-xs font-medium text-ink-muted">
-      <v-icon icon="mdi-paperclip" size="14" />
+      <AppIcon name="paperclip" :size="14" />
       ไฟล์แนบ {{ files.length }} ไฟล์
     </p>
     <div class="grid grid-cols-4 gap-2">
@@ -15,7 +15,7 @@
       >
         <img v-if="isImage(file.type)" :src="file.dataUrl" :alt="file.name" class="h-full w-full object-cover" />
         <span v-else class="flex h-full flex-col items-center justify-center gap-0.5 p-1">
-          <v-icon icon="mdi-file-pdf-box" size="26" class="text-status-outside" />
+          <AppIcon name="file-pdf" :size="26" class="text-status-outside" />
           <span class="line-clamp-1 break-all text-[9px] text-ink">{{ file.name }}</span>
         </span>
       </button>
@@ -32,7 +32,7 @@
         aria-label="ปิด"
         @click="previewOpen = false"
       >
-        <v-icon icon="mdi-close" />
+        <AppIcon name="x" />
       </button>
       <p v-if="preview" class="absolute inset-x-0 bottom-6 text-center text-xs text-white/70">{{ preview.name }}</p>
     </div>

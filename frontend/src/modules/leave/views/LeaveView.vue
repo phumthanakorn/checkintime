@@ -7,7 +7,7 @@
           class="flex h-10 items-center gap-1 rounded-full bg-status-checkin px-4 text-sm font-semibold text-white shadow-md shadow-status-checkin/30"
           @click="openForm"
         >
-          <v-icon icon="mdi-plus" size="18" />
+          <AppIcon name="plus" :size="18" />
           ยื่นใบลา
         </button>
       </template>
@@ -19,11 +19,11 @@
       <h2 class="text-base font-bold text-ink">คำขอลาของฉัน</h2>
       <SegmentedTabs v-model="filter" :options="filterOptions" />
 
-      <LoadingSpinner v-if="leave.loading && !leave.requests.length" text="กำลังโหลด..." />
+      <LoadingState v-if="leave.loading && !leave.requests.length" />
 
       <EmptyState
         v-else-if="!filteredRequests.length"
-        icon="mdi-calendar-check-outline"
+        icon="calendar-check"
         title="ไม่มีคำขอลา"
         description="กด “ยื่นใบลา” เพื่อส่งคำขอใหม่"
       />
@@ -48,10 +48,10 @@
         class="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-status-checkin font-semibold text-white shadow-lg shadow-status-checkin/30 disabled:opacity-70"
         :disabled="leave.submitting"
       >
-        <v-progress-circular v-if="leave.submitting" indeterminate size="20" width="2" />
+        <LoadingDots v-if="leave.submitting" />
         <template v-else>
           ส่งคำขอลา
-          <v-icon icon="mdi-send" size="18" />
+          <AppIcon name="send" :size="18" />
         </template>
       </button>
     </template>
@@ -77,7 +77,7 @@ import PageHeader from '@/components/layout/PageHeader.vue'
 import SegmentedTabs from '@/components/common/SegmentedTabs.vue'
 import AppBottomSheet from '@/components/common/AppBottomSheet.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import LoadingSpinner from '@/components/feedback/LoadingSpinner.vue'
+import LoadingState from '@/components/feedback/LoadingState.vue'
 import EmptyState from '@/components/feedback/EmptyState.vue'
 import LeaveBalanceList from '../components/LeaveBalanceList.vue'
 import LeaveRequestItem from '../components/LeaveRequestItem.vue'

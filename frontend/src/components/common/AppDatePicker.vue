@@ -9,15 +9,15 @@
         @click="view = view === 'days' ? 'months' : 'days'"
       >
         {{ view === 'days' ? formatMonth(cursor) : `พ.ศ. ${cursorYear + 543}` }}
-        <v-icon :icon="view === 'days' ? 'mdi-chevron-down' : 'mdi-chevron-up'" size="20" class="text-ink-muted" />
+        <AppIcon :name="view === 'days' ? 'caret-down' : 'caret-up'" :size="20" class="text-ink-muted" />
       </button>
 
       <div class="flex gap-1">
         <button type="button" class="nav-btn" :aria-label="view === 'days' ? 'เดือนก่อนหน้า' : 'ปีก่อนหน้า'" @click="step(-1)">
-          <v-icon icon="mdi-chevron-left" size="22" />
+          <AppIcon name="caret-left" :size="22" />
         </button>
         <button type="button" class="nav-btn" :aria-label="view === 'days' ? 'เดือนถัดไป' : 'ปีถัดไป'" @click="step(1)">
-          <v-icon icon="mdi-chevron-right" size="22" />
+          <AppIcon name="caret-right" :size="22" />
         </button>
       </div>
     </div>

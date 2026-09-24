@@ -14,7 +14,7 @@
           aria-label="ปิด"
           @click="open = false"
         >
-          <v-icon icon="mdi-close" size="18" />
+          <AppIcon name="x" :size="18" />
         </button>
       </div>
 

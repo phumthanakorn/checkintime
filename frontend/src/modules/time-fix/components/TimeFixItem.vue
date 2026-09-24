@@ -5,7 +5,7 @@
     @click="emit('select', request)"
   >
     <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50">
-      <v-icon icon="mdi-clock-edit-outline" size="22" class="text-violet-500" />
+      <AppIcon name="clock-edit" :size="22" weight="duotone" class="text-violet-500" />
     </span>
 
     <span class="min-w-0 flex-1">
@@ -14,21 +14,21 @@
         <StatusBadge :label="status.label" :tone="status.tone" />
       </span>
       <span class="mt-0.5 flex items-center gap-1 text-xs text-ink">
-        <v-icon icon="mdi-calendar-blank-outline" size="14" class="text-ink-muted" />
+        <AppIcon name="calendar" :size="14" class="text-ink-muted" />
         {{ formatThaiDate(request.date) }}
       </span>
       <span class="mt-1 flex items-center gap-3 text-xs">
         <span v-if="request.checkIn" class="flex items-center gap-1">
-          <v-icon icon="mdi-login" size="14" class="text-status-checkin" />
+          <AppIcon name="sign-in" :size="14" class="text-status-checkin" />
           <span class="font-display font-semibold text-ink">{{ request.checkIn }}</span>
         </span>
         <span v-if="request.checkOut" class="flex items-center gap-1">
-          <v-icon icon="mdi-logout" size="14" class="text-status-checkout" />
+          <AppIcon name="sign-out" :size="14" class="text-status-checkout" />
           <span class="font-display font-semibold text-ink">{{ request.checkOut }}</span>
         </span>
         <span class="truncate text-ink-muted">· {{ request.reason }}</span>
         <span v-if="request.attachments?.length" class="flex shrink-0 items-center gap-0.5 text-ink-muted">
-          <v-icon icon="mdi-paperclip" size="13" />{{ request.attachments.length }}
+          <AppIcon name="paperclip" :size="13" />{{ request.attachments.length }}
         </span>
       </span>
     </span>

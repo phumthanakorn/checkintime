@@ -6,7 +6,7 @@
     :aria-label="ariaLabel"
     @click="openPicker"
   >
-    <v-icon icon="mdi-calendar-blank-outline" size="18" class="text-ink-muted" />
+    <AppIcon name="calendar" :size="18" class="text-ink-muted" />
     <span class="truncate text-sm" :class="model ? 'text-ink' : 'text-slate-400'">
       {{ model ? formatDayMonth(model, true) : placeholder }}
     </span>

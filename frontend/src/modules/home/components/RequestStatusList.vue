@@ -15,7 +15,7 @@
           class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
           :class="item.available ? item.bg : 'bg-slate-100'"
         >
-          <v-icon :icon="item.icon" size="22" :class="item.available ? item.color : 'text-slate-400'" />
+          <AppIcon :name="item.icon" :size="22" weight="duotone" :class="item.available ? item.color : 'text-slate-400'" />
         </span>
         <span class="min-w-0 flex-1">
           <span class="block text-sm font-semibold" :class="item.available ? 'text-ink' : 'text-ink-muted'">
@@ -31,7 +31,7 @@
         >
           เร็ว ๆ นี้
         </span>
-        <v-icon v-else icon="mdi-chevron-right" class="text-slate-300" />
+        <AppIcon v-else name="caret-right" class="text-slate-300" />
       </button>
     </div>
   </section>
@@ -51,21 +51,21 @@ const emit = defineEmits(['select'])
 const META = {
   [REQUEST_TYPES.LEAVE]: {
     label: 'การลา',
-    icon: 'mdi-calendar-check',
+    icon: 'calendar-check',
     bg: 'bg-status-checkin/10',
     color: 'text-status-checkin',
     available: true,
   },
   [REQUEST_TYPES.TIME_FIX]: {
     label: 'ขอลงเวลาย้อนหลัง',
-    icon: 'mdi-clock-edit-outline',
+    icon: 'clock-edit',
     bg: 'bg-violet-50',
     color: 'text-violet-500',
     available: true,
   },
   [REQUEST_TYPES.ADVANCE]: {
     label: 'การเบิกเงิน',
-    icon: 'mdi-wallet',
+    icon: 'wallet',
     bg: 'bg-metric-blue/10',
     color: 'text-metric-blue',
     available: FEATURES.ADVANCE_REQUEST,

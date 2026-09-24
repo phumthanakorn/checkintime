@@ -45,7 +45,7 @@ src/
 ├── components/
 │   ├── common/               AppButton, ConfirmModal, AppBottomSheet, DateField,
 │   │                         MonthSwitcher, SegmentedTabs, StatusBadge
-│   ├── feedback/             LoadingSpinner, ToastNotification, EmptyState
+│   ├── feedback/             LoadingDots, LoadingState, ToastNotification, EmptyState
 │   └── layout/               AppHeader, AppBottomNav, PageHeader
 └── modules/
     ├── auth/                 LoginForm | LoginView
@@ -105,3 +105,20 @@ src/
 | font-sans / font-display | Prompt / Plus Jakarta Sans | `font-display` (เวลา ตัวเลขสถิติ) |
 
 Radii: การ์ดหลักและการ์ดสถิติ `rounded-[28px]`, ปุ่มและรายการ `rounded-2xl`, ไอคอนและรูปโปรไฟล์ `rounded-full`
+
+## ไอคอน
+
+ใช้ [Phosphor Icons](https://phosphoricons.com) ผ่าน component กลาง `AppIcon` (ลงทะเบียนไว้ทั้งแอป ไม่ต้อง import)
+
+```vue
+<AppIcon name="calendar" :size="20" weight="duotone" class="text-metric-blue" />
+```
+
+| weight | ใช้ตรงไหน |
+| --- | --- |
+| `regular` (ค่าเริ่มต้น) | ไอคอนทั่วไป, แท็บที่ไม่ได้เลือก |
+| `fill` | แท็บที่เลือกอยู่, สถานะที่ต้องการเน้น |
+| `duotone` | ไอคอนในวงกลม/กล่องสีอ่อน (สถิติ, ประเภทการลา, เมนู) |
+| `bold` | ไอคอนในปุ่มหลักของการ์ดลงเวลา |
+
+เพิ่มไอคอนใหม่: ค้นชื่อที่ phosphoricons.com แล้ว import + ใส่ชื่อสั้นใน `ICONS` ของ [src/components/common/AppIcon.vue](src/components/common/AppIcon.vue)

@@ -20,7 +20,7 @@
     <span v-if="record.missing" class="min-w-0 flex-1">
       <span class="block text-sm font-semibold text-ink">ไม่มีการลงเวลา</span>
       <span class="mt-0.5 flex items-center gap-1 text-xs" :class="hasPendingFix(record) ? 'text-metric-blue' : 'text-status-outside'">
-        <v-icon :icon="hasPendingFix(record) ? 'mdi-timer-sand' : 'mdi-gesture-tap'" size="14" />
+        <AppIcon :name="hasPendingFix(record) ? 'hourglass' : 'hand-tap'" :size="14" />
         {{ hasPendingFix(record) ? 'ส่งคำขอแล้ว รอหัวหน้าอนุมัติ' : 'แตะเพื่อขอลงเวลาย้อนหลัง' }}
       </span>
     </span>
@@ -29,12 +29,12 @@
     <span v-else class="min-w-0 flex-1">
       <span class="flex items-center gap-3">
         <span class="flex items-center gap-1">
-          <v-icon icon="mdi-login" size="14" class="text-status-checkin" />
+          <AppIcon name="sign-in" :size="14" class="text-status-checkin" />
           <span class="font-display text-sm font-semibold text-ink">{{ formatClock(record.checkIn) }}</span>
         </span>
         <span class="h-3 w-px bg-slate-200" />
         <span class="flex items-center gap-1">
-          <v-icon icon="mdi-logout" size="14" class="text-status-checkout" />
+          <AppIcon name="sign-out" :size="14" class="text-status-checkout" />
           <span class="font-display text-sm font-semibold text-ink">{{ formatClock(record.checkOut) }}</span>
         </span>
       </span>

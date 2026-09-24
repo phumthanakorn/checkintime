@@ -9,7 +9,8 @@
       class="flex flex-col items-center gap-1 py-3 text-[11px] font-medium no-underline transition-colors"
       :class="isActive(item) ? 'font-semibold text-metric-blue' : 'text-ink-muted'"
     >
-      <v-icon :icon="isActive(item) ? item.activeIcon : item.icon" size="22" />
+      <!-- แท็บที่เลือก: ไอคอนแบบทึบ -->
+      <AppIcon :name="item.icon" :size="24" :weight="isActive(item) ? 'fill' : 'regular'" />
       {{ item.label }}
     </router-link>
   </nav>
@@ -21,10 +22,10 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 
 const items = [
-  { name: 'home', label: 'หน้าหลัก', icon: 'mdi-home-outline', activeIcon: 'mdi-home' },
-  { name: 'history', label: 'ประวัติ', icon: 'mdi-history', activeIcon: 'mdi-history' },
-  { name: 'leave', label: 'การลา', icon: 'mdi-calendar-blank-outline', activeIcon: 'mdi-calendar-blank' },
-  { name: 'profile', label: 'ฉัน', icon: 'mdi-account-circle-outline', activeIcon: 'mdi-account-circle' },
+  { name: 'home', label: 'หน้าหลัก', icon: 'home' },
+  { name: 'history', label: 'ประวัติ', icon: 'history' },
+  { name: 'leave', label: 'การลา', icon: 'calendar' },
+  { name: 'profile', label: 'ฉัน', icon: 'user-circle' },
 ]
 
 // หน้าย่อย (เช่น สลิป) ระบุแท็บแม่ผ่าน meta.tab

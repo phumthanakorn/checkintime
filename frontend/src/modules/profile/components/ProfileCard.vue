@@ -25,7 +25,7 @@
           <span
             class="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 font-display text-xs font-semibold"
           >
-            <v-icon icon="mdi-card-account-details-outline" size="14" />
+            <AppIcon name="id-card" :size="14" />
             {{ user?.employeeCode }}
           </span>
         </div>

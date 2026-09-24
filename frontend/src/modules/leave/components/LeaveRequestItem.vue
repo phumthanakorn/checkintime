@@ -5,7 +5,7 @@
     @click="emit('select', request)"
   >
     <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" :class="meta.bg">
-      <v-icon :icon="meta.icon" size="22" :class="meta.color" />
+      <AppIcon :name="meta.icon" :size="22" weight="duotone" :class="meta.color" />
     </span>
 
     <span class="min-w-0 flex-1">
@@ -17,7 +17,7 @@
         <StatusBadge :label="status.label" :tone="status.tone" />
       </span>
       <span class="mt-0.5 flex items-center gap-1 text-xs text-ink">
-        <v-icon icon="mdi-calendar-range" size="14" class="text-ink-muted" />
+        <AppIcon name="calendar-dots" :size="14" class="text-ink-muted" />
         {{ formatDateRange(request.startDate, request.endDate) }}
         <span v-if="request.period !== LEAVE_PERIODS.FULL" class="text-ink-muted">
           ({{ LEAVE_PERIOD_LABELS[request.period] }})
@@ -26,7 +26,7 @@
       <span class="mt-1 flex items-center gap-2 text-xs text-ink-muted">
         <span class="truncate">{{ request.reason }}</span>
         <span v-if="request.attachments?.length" class="flex shrink-0 items-center gap-0.5">
-          <v-icon icon="mdi-paperclip" size="13" />{{ request.attachments.length }}
+          <AppIcon name="paperclip" :size="13" />{{ request.attachments.length }}
         </span>
       </span>
     </span>
