@@ -51,9 +51,12 @@ src/
 │   └── layout/               AppHeader, AppBottomNav, PageHeader
 └── modules/
     ├── auth/                 LoginForm | LoginView, ForgotPasswordView, PinLoginView
-    ├── home/                 CheckInCard, AttendanceStats, RequestStatusList | HomeView
+    ├── home/                 CheckInCard, AttendanceStats, RequestStatusList, OfflineSheet,
+    │                         LocationPermissionBanner | HomeView, OutOfAreaView
     ├── history/              HistorySummary, HistoryItem, HistoryDetailSheet | HistoryView
     ├── onboarding/           ConsentStep, LocationStep | OnboardingView (ยินยอม PDPA + ขอตำแหน่ง)
+    ├── calendar/             CalendarMonth, CalendarDayDetail | CalendarView
+    ├── announcements/        AnnouncementView
     ├── notifications/        NotificationItem | NotificationsView
     ├── time-fix/             TimeFixForm, TimeFixItem, TimeFixDetailSheet | TimeFixView
     ├── leave/                LeaveBalanceList, LeaveRequestItem, LeaveRequestForm,
@@ -102,6 +105,9 @@ src/
 | POST | `/time-fix/requests/:id/cancel` | ยกเลิกคำขอที่รออนุมัติ |
 | GET | `/payslips` | เดือนที่สลิปออกแล้ว `[{ month, netPay }]` |
 | GET | `/payslips/:month` | รายละเอียดสลิป (รายได้, รายการหัก, ยอดสุทธิ, สรุปเวลาทำงาน) — 404 ถ้ายังไม่ออก |
+| GET | `/calendar?month=YYYY-MM` | ปฏิทินรายวัน: กะ วันหยุด วันลา สถานะลงเวลา |
+| GET | `/announcements/:id` | รายละเอียดประกาศ |
+| POST | `/announcements/:id/acknowledge` | กดรับทราบประกาศ |
 | GET | `/notifications` | การแจ้งเตือน `[{ id, type, title, body, createdAt, read, link }]` |
 | POST | `/notifications/:id/read` | อ่านแล้ว |
 | POST | `/notifications/read-all` | อ่านทั้งหมด |

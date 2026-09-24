@@ -170,7 +170,8 @@
   "link": { "name": "leave" }      // หน้าที่จะเปิดเมื่อแตะ หรือ null
 }
 ค่า link.name ที่ Frontend รองรับ:
-  home, history, time-fix, leave, payslip, notifications, profile
+  home, history, time-fix, leave, payslip, notifications, profile, calendar,
+  announcement (ต้องมี params: { id })
 
 3.7 Payslip
 {
@@ -324,6 +325,31 @@
          200:  Payslip        404: สลิปเดือนนี้จะออกวันที่ 25
 
 
+4.8 ปฏิทินของฉัน   (calendarService.js)
+
+  GET    /calendar?month=YYYY-MM                    [Auth]
+         200:  { "month": "2026-10", "days": [
+                   { "date": "2026-10-13",
+                     "shift": { "code": "DAY", "name": "กะปกติ", "start": "09:00", "end": "18:00" } | null,   // null = วันหยุด
+                     "holiday": { "name": "วันนวมินทรมหาราช" } | null,
+                     "leave": { "id": 12, "leaveType": "personal", "period": "full", "status": "pending" } | null,
+                     "attendance": "on_time" | "late" | "incomplete" | "missing" | "working" | null,
+                     "checkIn": "..." | null, "checkOut": "..." | null } ] }
+         * ส่งครบทุกวันของเดือน ดูล่วงหน้าได้ถึง 12 เดือน (สำหรับวางแผนลา)
+         * leave แสดงเฉพาะที่ approved / pending
+
+4.9 ประกาศ   (announcementService.js)
+
+  GET    /announcements/{id}                        [Auth]
+         200:  { "id", "category": "วันหยุด", "title", "summary", "body": ["ย่อหน้า 1", "ย่อหน้า 2"],
+                 "author": "ฝ่ายบุคคล", "publishedAt", "requireAck": true, "acknowledgedAt": null,
+                 "attachments": [ Attachment ] (ไม่บังคับ) }
+         404:  ไม่พบประกาศ
+  POST   /announcements/{id}/acknowledge            [Auth]   กดรับทราบ -> ประกาศล่าสุด (มี acknowledgedAt)
+         * acknowledgedAt เป็นของผู้ใช้แต่ละคน (เก็บแยกต่อพนักงาน)
+         * Notification ประเภท announcement ใช้ link: { "name": "announcement", "params": { "id": 49 } }
+
+
 -------------------------------------------------------------------------------
 5. กฎการคำนวณ (Business rules) - ค่าปัจจุบันใน Frontend
 -------------------------------------------------------------------------------
@@ -341,6 +367,7 @@
   ยื่นลาได้เมื่อ              (คงเหลือ - รออนุมัติ) >= จำนวนวันที่ขอ
   ขอลงเวลาย้อนหลัง           ไม่เกิน 30 วัน, 1 วันมีคำขอ pending ได้ 1 รายการ
   ไฟล์แนบ                   สูงสุด 3 ไฟล์, ไฟล์ละ 5 MB, รูปภาพหรือ PDF
+  วันหยุดบริษัท              ไม่นับเป็นขาดงาน และไม่ควรนับเป็นวันลา (ส่งมาทาง /integrations/v1/holidays)
   Geofence                 รัศมี 200 เมตรจากพิกัดสำนักงาน (ตอนนี้ปิดไว้: VITE_ENFORCE_GEOFENCE)
                            ** ต้องตรวจซ้ำที่ Backend อย่าเชื่อค่าจาก Frontend อย่างเดียว **
   สลิปออก                   วันที่ 25 ของทุกเดือน (PAYDAY)

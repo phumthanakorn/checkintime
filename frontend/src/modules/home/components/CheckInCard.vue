@@ -21,6 +21,13 @@
           <AppIcon name="hand-tap" :size="14" />
           แตะค้างไว้เพื่อลงเวลา
         </p>
+        <p
+          v-else-if="config.help"
+          class="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-medium"
+        >
+          <AppIcon name="map-pin" :size="14" />
+          แตะปุ่มเพื่อดูแผนที่
+        </p>
       </div>
 
       <div class="relative shrink-0">
@@ -53,8 +60,9 @@
           type="button"
           class="hold-button flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-2xl bg-card px-2 shadow-md transition-transform duration-150"
           :class="holding && 'scale-95'"
-          :disabled="!config.actionable || loading"
-          :aria-label="`กดค้างเพื่อ${config.label}`"
+          :disabled="(!config.actionable && !config.help) || loading"
+          :aria-label="config.help ? 'อยู่นอกพื้นที่ แตะเพื่อดูแผนที่' : `กดค้างเพื่อ${config.label}`"
+          @click="config.help && emit('help')"
           @pointerdown="onPointerDown"
           @pointerup="cancel"
           @pointercancel="cancel"
@@ -92,7 +100,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['action'])
+const emit = defineEmits(['action', 'help'])
 
 // สีตาม Card Status Palette (ดู tokens ใน assets/css/tailwind.css)
 const STATE_CONFIG = {
@@ -127,6 +135,7 @@ const STATE_CONFIG = {
     icon: 'map-pin',
     label: 'อยู่นอกพื้นที่',
     actionable: false,
+    help: true, // แตะธรรมดา (ไม่ต้องกดค้าง) เพื่อเปิดหน้าแผนที่
   },
 }
 
@@ -145,6 +154,7 @@ watch(
 )
 
 function onPointerDown(event) {
+  if (!config.value.actionable) return
   if (event.button !== 0) return
   // จับ pointer ไว้ นิ้วเลื่อนเล็กน้อยก็ยังนับว่ากดค้างอยู่
   event.currentTarget.setPointerCapture?.(event.pointerId)
@@ -152,6 +162,8 @@ function onPointerDown(event) {
 }
 
 function onKeyDown(event) {
+  if (config.value.help) return emit('help')
+  if (!config.value.actionable) return
   if (!event.repeat) begin()
 }
 </script>

@@ -4,7 +4,7 @@
 
     <LocationPermissionBanner />
 
-    <CheckInCard :state="displayState" :now="now" :loading="attendance.submitting" @action="handleAction" />
+    <CheckInCard :state="displayState" :now="now" :loading="attendance.submitting" @action="handleAction" @help="openOutOfArea" />
 
     <AttendanceStats :summary="displaySummary" />
 
@@ -21,6 +21,8 @@
     @confirm="doCheckOut"
   />
 
+  <OfflineSheet v-model="offlineOpen" />
+
   <ClockSuccessOverlay v-model="celebration.open" v-bind="celebration.props" />
 </template>
 
@@ -33,6 +35,8 @@ import RequestStatusList from '../components/RequestStatusList.vue'
 import StatePreviewSwitcher from '../components/StatePreviewSwitcher.vue'
 import ClockSuccessOverlay from '../components/ClockSuccessOverlay.vue'
 import LocationPermissionBanner from '../components/LocationPermissionBanner.vue'
+import OfflineSheet from '../components/OfflineSheet.vue'
+import { useOnline } from '@/composables/useOnline'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useAttendanceStore } from '@/store'
 import { useNow } from '@/composables/useNow'
@@ -59,6 +63,13 @@ const router = useRouter()
 const now = useNow()
 
 const confirmCheckOut = ref(false)
+const offlineOpen = ref(false)
+const online = useOnline()
+
+/** หน้าแผนที่เมื่ออยู่นอกพื้นที่ (โหมดตัวอย่างใช้ตำแหน่งจำลอง) */
+function openOutOfArea() {
+  router.push({ name: 'out-of-area', query: previewState.value ? { demo: 1 } : {} })
+}
 const previewState = ref(null)
 
 // หน้าจอฉลองหลังลงเวลาสำเร็จ
@@ -118,10 +129,16 @@ async function handleAction(state) {
     return
   }
 
+  // ไม่มีอินเทอร์เน็ต -> อธิบายวิธีแก้
+  if (!online.value) {
+    offlineOpen.value = true
+    return
+  }
+
   // ขอพิกัดใหม่ทุกครั้งก่อนลงเวลา
   await geofence.refresh()
   if (!geofence.inside.value) {
-    notify.warning('คุณอยู่นอกพื้นที่ที่อนุญาตให้ลงเวลา')
+    openOutOfArea()
     return
   }
 

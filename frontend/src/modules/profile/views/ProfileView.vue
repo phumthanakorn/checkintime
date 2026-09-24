@@ -75,6 +75,14 @@ const workMenu = [
     color: 'text-metric-blue',
   },
   {
+    key: 'calendar',
+    label: 'ปฏิทินของฉัน',
+    description: 'วันหยุด วันลา และกะการทำงาน',
+    icon: 'calendar-dots',
+    bg: 'bg-metric-blue/10',
+    color: 'text-metric-blue',
+  },
+  {
     key: 'history',
     label: 'ประวัติการลงเวลา',
     description: 'เวลาเข้า-ออกงานรายวัน',
@@ -165,6 +173,7 @@ onMounted(async () => {
 // key ของเมนู -> ชื่อ route
 const ROUTES = {
   payslip: 'payslip',
+  calendar: 'calendar',
   history: 'history',
   'time-fix': 'time-fix',
   personal: 'profile-personal',

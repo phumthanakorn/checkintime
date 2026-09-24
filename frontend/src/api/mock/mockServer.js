@@ -21,7 +21,7 @@ import { formatDayMonth, toDateKey, toMonthKey } from '@/utils/formatters'
 import { countWeekdays, isWeekend, shiftMonth, toDate } from '@/utils/dates'
 
 // เพิ่มเลขนี้เมื่อเปลี่ยนรูปแบบข้อมูล seed เพื่อให้สร้างข้อมูลใหม่อัตโนมัติ
-const DB_VERSION = 5
+const DB_VERSION = 6
 
 const SEED_USERS = [
   {
@@ -39,6 +39,42 @@ const SEED_USERS = [
     emergencyContact: { name: 'นาง สมศรี ใจดี', relation: 'มารดา', phone: '089-765-4321' },
   },
 ]
+
+/** วันหยุดบริษัท (ตัวอย่าง อ้างอิงวันหยุดราชการ ควรแทนด้วยปฏิทินจริงของบริษัท) */
+const HOLIDAYS = {
+  '2026-01-01': 'วันขึ้นปีใหม่',
+  '2026-03-03': 'วันมาฆบูชา',
+  '2026-04-06': 'วันจักรี',
+  '2026-04-13': 'วันสงกรานต์',
+  '2026-04-14': 'วันสงกรานต์',
+  '2026-04-15': 'วันสงกรานต์',
+  '2026-05-01': 'วันแรงงานแห่งชาติ',
+  '2026-05-04': 'วันฉัตรมงคล',
+  '2026-06-01': 'ชดเชยวันวิสาขบูชา',
+  '2026-06-03': 'วันเฉลิมพระชนมพรรษาสมเด็จพระราชินี',
+  '2026-07-28': 'วันเฉลิมพระชนมพรรษา ร.10',
+  '2026-07-29': 'วันอาสาฬหบูชา',
+  '2026-08-12': 'วันแม่แห่งชาติ',
+  '2026-10-13': 'วันนวมินทรมหาราช',
+  '2026-10-23': 'วันปิยมหาราช',
+  '2026-12-07': 'ชดเชยวันพ่อแห่งชาติ',
+  '2026-12-10': 'วันรัฐธรรมนูญ',
+  '2026-12-31': 'วันสิ้นปี',
+  '2027-01-01': 'วันขึ้นปีใหม่',
+}
+
+const isHoliday = (key) => !!HOLIDAYS[key]
+
+/** กะการทำงาน (ตัวอย่าง: ทุกคนกะเดียว จ.-ศ.) */
+const SHIFTS = {
+  DAY: { code: 'DAY', name: 'กะปกติ', start: WORK_START_TIME, end: WORK_END_TIME },
+}
+
+/** กะของวันนั้น (null = วันหยุด) */
+function shiftOf(key) {
+  if (isWeekend(key) || isHoliday(key)) return null
+  return SHIFTS.DAY
+}
 
 /** โควตาวันลาต่อปี */
 const LEAVE_QUOTAS = {
@@ -241,9 +277,46 @@ function seed() {
     month: 'long',
     year: 'numeric',
   })
+  // ประกาศจากบริษัท (ตัวอย่าง)
+  const announcements = [
+    {
+      id: nextId++,
+      category: 'วันหยุด',
+      title: 'ประกาศวันหยุดชดเชย วันพ่อแห่งชาติ',
+      summary: 'หยุดชดเชยวันจันทร์ที่ 7 ธ.ค. 2569',
+      body: [
+        'เนื่องด้วยวันพ่อแห่งชาติ วันที่ 5 ธันวาคม 2569 ตรงกับวันเสาร์ บริษัทจึงกำหนดให้วันจันทร์ที่ 7 ธันวาคม 2569 เป็นวันหยุดชดเชย',
+        'พนักงานที่ต้องปฏิบัติงานในวันดังกล่าวตามตารางกะ จะได้รับค่าตอบแทนการทำงานในวันหยุดตามระเบียบบริษัท กรุณาแจ้งหัวหน้างานล่วงหน้าอย่างน้อย 3 วันทำการ',
+        'ขอให้ทุกคนวางแผนงานและส่งมอบงานที่ค้างให้เรียบร้อยก่อนวันหยุด หากมีข้อสงสัยติดต่อฝ่ายบุคคล',
+      ],
+      author: 'ฝ่ายบุคคล',
+      publishedAt: hoursAgo(3),
+      requireAck: true,
+      acknowledgedAt: null,
+    },
+    {
+      id: nextId++,
+      category: 'สวัสดิการ',
+      title: 'เปิดลงทะเบียนตรวจสุขภาพประจำปี 2569',
+      summary: 'ลงทะเบียนภายใน 15 ต.ค. 2569',
+      body: [
+        'บริษัทจัดตรวจสุขภาพประจำปีให้พนักงานทุกคนโดยไม่มีค่าใช้จ่าย ในวันที่ 20–22 ตุลาคม 2569 ณ ห้องประชุมชั้น 3',
+        'กรุณาลงทะเบียนเลือกวันและเวลาผ่านฝ่ายบุคคลภายในวันที่ 15 ตุลาคม 2569 และงดน้ำงดอาหารอย่างน้อย 8 ชั่วโมงก่อนตรวจ',
+      ],
+      author: 'ฝ่ายบุคคล',
+      publishedAt: new Date(Date.now() - 6 * 86400000).toISOString(),
+      requireAck: false,
+      acknowledgedAt: null,
+    },
+  ]
+
   const notifications = [
+    notify(NOTIFICATION_TYPES.ANNOUNCEMENT, announcements[1].title, announcements[1].summary, announcements[1].publishedAt, true, {
+      name: 'announcement',
+      params: { id: announcements[1].id },
+    }),
     notify(NOTIFICATION_TYPES.REMINDER, 'อย่าลืมลงเวลาเข้างาน', 'วันนี้เริ่มงาน 09:00 น. แตะเพื่อไปหน้าลงเวลา', hoursAgo(0.3), false, { name: 'home' }),
-    notify(NOTIFICATION_TYPES.ANNOUNCEMENT, 'ประกาศวันหยุดชดเชย', 'บริษัทหยุดชดเชยวันจันทร์ที่ 13 ต.ค. 2569 ขอให้ทุกคนวางแผนงานล่วงหน้า', hoursAgo(3), false),
+    notify(NOTIFICATION_TYPES.ANNOUNCEMENT, announcements[0].title, 'หยุดชดเชยวันจันทร์ที่ 7 ธ.ค. 2569 แทนวันพ่อแห่งชาติ แตะเพื่ออ่านรายละเอียด', announcements[0].publishedAt, false, { name: 'announcement', params: { id: announcements[0].id } }),
     notify(NOTIFICATION_TYPES.REMINDER, 'คุณยังไม่ได้ลงเวลาออกงาน', 'ถ้าลืมกดออกงาน ส่งคำขอลงเวลาย้อนหลังได้เลย', at(forgotOutPending, '19:00'), true, { name: 'time-fix' }),
     notify(NOTIFICATION_TYPES.PAYSLIP, `สลิปเงินเดือน ${payslipMonth} ออกแล้ว`, 'ดูรายละเอียดรายได้และรายการหักได้ในเมนูสลิป', at(firstOfMonth, '10:00'), false, { name: 'payslip' }),
     notify(NOTIFICATION_TYPES.LEAVE_APPROVED, 'ใบลาป่วยได้รับการอนุมัติ', `ลาป่วย ${sick.days} วัน (${formatDayMonth(sick.startDate, true)}) หัวหน้าอนุมัติแล้ว`, at(sick.startDate, '11:20'), true, { name: 'leave' }),
@@ -252,7 +325,7 @@ function seed() {
     notify(NOTIFICATION_TYPES.TIME_FIX_APPROVED, 'คำขอลงเวลาย้อนหลังได้รับอนุมัติ', 'เวลาเข้างาน 08:52 น. ถูกบันทึกในประวัติแล้ว', at(toDate(fixedCheckIn).getTime() + 86400000, '10:15'), true, { name: 'history' }),
   ]
 
-  return { version: DB_VERSION, users: SEED_USERS, records, requests, notifications, nextId }
+  return { version: DB_VERSION, users: SEED_USERS, records, requests, notifications, announcements, nextId }
 }
 
 function saveDb(db) {
@@ -532,7 +605,7 @@ export const mockAttendance = {
     for (let d = new Date(y, m - 1, 1); d.getMonth() === m - 1; d.setDate(d.getDate() + 1)) {
       const key = toDateKey(d)
       if (key >= toDateKey() || key < firstTracked) continue
-      if (isWeekend(d) || recordDates.has(key) || leaveDays.has(key)) continue
+      if (isWeekend(d) || isHoliday(key) || recordDates.has(key) || leaveDays.has(key)) continue
       missing.push({ id: `missing-${key}`, date: key, missing: true, checkIn: null, checkOut: null, lateMinutes: 0, otMinutes: 0, workMinutes: null })
     }
 
@@ -770,7 +843,7 @@ function monthAttendance(db, userId, month) {
   let monthLeaveDays = 0
   for (let d = new Date(y, m - 1, 1); d.getMonth() === m - 1; d.setDate(d.getDate() + 1)) {
     const key = toDateKey(d)
-    if (isWeekend(d) || key >= toDateKey() || key < firstTracked) continue
+    if (isWeekend(d) || isHoliday(key) || key >= toDateKey() || key < firstTracked) continue
     if (leaveDays.has(key)) monthLeaveDays++
     else if (!recordDates.has(key) && !approvedFixDates.has(key)) absentDays++
   }
@@ -865,5 +938,83 @@ export const mockPayslip = {
     const user = currentUser(db)
     if (!isReleased(month)) fail(404, `สลิปเดือนนี้จะออกวันที่ ${PAYDAY}`)
     return buildPayslip(db, user, month)
+  },
+}
+
+// ---------- ปฏิทิน ----------
+
+export const mockCalendar = {
+  /**
+   * ข้อมูลรายวันของเดือน: กะ, วันหยุด, การลา, สถานะการลงเวลา
+   * @returns {{ month, days: Array<{ date, shift, holiday, leave, attendance }> }}
+   */
+  async getMonth({ month = toMonthKey() } = {}) {
+    await delay(350)
+    const db = loadDb()
+    const user = currentUser(db)
+    const today = toDateKey()
+    const records = db.records.filter((r) => r.userId === user.id)
+    const firstTracked = records.reduce((min, r) => (r.date < min ? r.date : min), today)
+    const leaves = leaveRequestsOf(db, user.id).filter((r) =>
+      [LEAVE_STATUS.APPROVED, LEAVE_STATUS.PENDING].includes(r.status),
+    )
+
+    const [y, m] = month.split('-').map(Number)
+    const days = []
+    for (let d = new Date(y, m - 1, 1); d.getMonth() === m - 1; d.setDate(d.getDate() + 1)) {
+      const key = toDateKey(d)
+      const shift = shiftOf(key)
+      const leave = leaves.find((r) => r.startDate <= key && key <= r.endDate && !isWeekend(key) && !isHoliday(key))
+      const record = records.find((r) => r.date === key)
+
+      let attendance = null
+      if (record) {
+        if (!record.checkOut) attendance = key === today ? 'working' : 'incomplete'
+        else attendance = record.lateMinutes > 0 ? 'late' : 'on_time'
+      } else if (
+        shift &&
+        key < today &&
+        key >= firstTracked &&
+        !(leave?.status === LEAVE_STATUS.APPROVED && leave.period === LEAVE_PERIODS.FULL)
+      ) {
+        attendance = 'missing'
+      }
+
+      days.push({
+        date: key,
+        shift,
+        holiday: HOLIDAYS[key] ? { name: HOLIDAYS[key] } : null,
+        leave: leave ? { id: leave.id, leaveType: leave.leaveType, period: leave.period, status: leave.status } : null,
+        attendance,
+        checkIn: record?.checkIn ?? null,
+        checkOut: record?.checkOut ?? null,
+      })
+    }
+    return { month, days }
+  },
+}
+
+// ---------- ประกาศ ----------
+
+export const mockAnnouncement = {
+  async get(id) {
+    await delay(300)
+    const db = loadDb()
+    currentUser(db)
+    const item = (db.announcements || []).find((a) => a.id === Number(id))
+    if (!item) fail(404, 'ไม่พบประกาศนี้ หรือประกาศถูกลบไปแล้ว')
+    return clone(item)
+  },
+
+  /** กดรับทราบประกาศ */
+  async acknowledge(id) {
+    await delay(300)
+    const db = loadDb()
+    currentUser(db)
+    const item = (db.announcements || []).find((a) => a.id === Number(id))
+    if (!item) fail(404, 'ไม่พบประกาศนี้')
+    item.acknowledgedAt = item.acknowledgedAt || new Date().toISOString()
+    saveDb(db)
+    return clone(item)
   },
 }

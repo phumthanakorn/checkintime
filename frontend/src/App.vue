@@ -4,6 +4,7 @@
       <router-view />
     </component>
     <ToastNotification />
+    <OfflineBanner />
   </v-app>
 </template>
 
@@ -14,6 +15,7 @@ import MainLayout from '@/layouts/MainLayout.vue'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import BlankLayout from '@/layouts/BlankLayout.vue'
 import ToastNotification from '@/components/feedback/ToastNotification.vue'
+import OfflineBanner from '@/components/feedback/OfflineBanner.vue'
 
 const layouts = {
   main: MainLayout,

@@ -105,6 +105,24 @@ const routes = [
     meta: { layout: 'main', requiresAuth: true, hideHeader: true, title: 'การแจ้งเตือน' },
   },
   {
+    path: '/out-of-area',
+    name: 'out-of-area',
+    component: () => import('@/modules/home/views/OutOfAreaView.vue'),
+    meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'home', title: 'ลงเวลาไม่ได้' },
+  },
+  {
+    path: '/calendar',
+    name: 'calendar',
+    component: () => import('@/modules/calendar/views/CalendarView.vue'),
+    meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'profile', title: 'ปฏิทินของฉัน' },
+  },
+  {
+    path: '/announcements/:id',
+    name: 'announcement',
+    component: () => import('@/modules/announcements/views/AnnouncementView.vue'),
+    meta: { layout: 'main', requiresAuth: true, hideHeader: true, title: 'ประกาศ' },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/modules/system/views/NotFoundView.vue'),

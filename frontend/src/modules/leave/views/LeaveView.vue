@@ -2,6 +2,13 @@
   <div class="space-y-5">
     <PageHeader title="การลา" :subtitle="`วันลาคงเหลือปี ${new Date().getFullYear() + 543}`">
       <template #actions>
+        <router-link
+          :to="{ name: 'calendar', query: { from: 'leave' } }"
+          class="flex h-10 w-10 items-center justify-center rounded-full bg-card text-ink no-underline shadow-sm"
+          aria-label="ปฏิทินของฉัน"
+        >
+          <AppIcon name="calendar-dots" :size="20" class="text-metric-blue" />
+        </router-link>
         <button
           type="button"
           class="flex h-10 items-center gap-1 rounded-full bg-status-checkin px-4 text-sm font-semibold text-white shadow-md shadow-status-checkin/30"

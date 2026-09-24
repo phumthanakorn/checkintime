@@ -24,6 +24,7 @@ export const OT_MIN_MINUTES = 30
 
 // พื้นที่ที่อนุญาตให้ลงเวลา (geofence)
 export const OFFICE_LOCATION = {
+  name: import.meta.env.VITE_OFFICE_NAME || 'สำนักงานใหญ่',
   lat: Number(import.meta.env.VITE_OFFICE_LAT) || 13.7563,
   lng: Number(import.meta.env.VITE_OFFICE_LNG) || 100.5018,
   radiusMeters: Number(import.meta.env.VITE_OFFICE_RADIUS) || 200,
@@ -166,3 +167,14 @@ export const PAYDAY = 25
 /** เวอร์ชันนโยบายความเป็นส่วนตัว: เปลี่ยนค่านี้เมื่อแก้นโยบาย ผู้ใช้ทุกคนจะถูกขอความยินยอมใหม่ */
 export const PDPA_POLICY_VERSION = '2026-09-01'
 export const PDPA_UPDATED_AT = '1 ก.ย. 2569'
+
+// ---------- ปฏิทิน ----------
+
+/** สถานะการลงเวลาของแต่ละวันในปฏิทิน */
+export const DAY_STATUS_META = {
+  on_time: { label: 'ตรงเวลา', dot: 'bg-status-checkin' },
+  late: { label: 'มาสาย', dot: 'bg-status-checkout' },
+  incomplete: { label: 'ลงเวลาไม่ครบ', dot: 'bg-status-outside' },
+  missing: { label: 'ขาดลงเวลา', dot: 'bg-status-outside' },
+  working: { label: 'กำลังทำงาน', dot: 'bg-metric-blue' },
+}
