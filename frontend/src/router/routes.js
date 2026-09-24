@@ -50,6 +50,12 @@ const routes = [
     meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'profile', title: 'สลิปเงินเดือน' },
   },
   {
+    path: '/notifications',
+    name: 'notifications',
+    component: () => import('@/modules/notifications/views/NotificationsView.vue'),
+    meta: { layout: 'main', requiresAuth: true, hideHeader: true, title: 'การแจ้งเตือน' },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/modules/system/views/NotFoundView.vue'),

@@ -32,18 +32,33 @@
       <p class="truncate text-[13px] text-ink-muted">{{ user?.position }}</p>
     </div>
 
-    <button
-      class="flex h-10 w-10 items-center justify-center rounded-full bg-card text-ink shadow-sm"
-      aria-label="การแจ้งเตือน"
+    <router-link
+      :to="{ name: 'notifications' }"
+      class="relative flex h-10 w-10 items-center justify-center rounded-full bg-card text-ink no-underline shadow-sm"
+      :aria-label="notifications.unreadCount ? `การแจ้งเตือน ยังไม่อ่าน ${notifications.unreadCount} รายการ` : 'การแจ้งเตือน'"
     >
-      <AppIcon name="bell" :size="22" />
-    </button>
+      <AppIcon name="bell" :size="22" :weight="notifications.unreadCount ? 'fill' : 'regular'" />
+      <span
+        v-if="notifications.unreadCount"
+        class="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-status-outside px-1 font-display text-[10px] font-bold text-white ring-2 ring-app-bg"
+      >
+        {{ notifications.unreadCount > 9 ? '9+' : notifications.unreadCount }}
+      </span>
+    </router-link>
   </header>
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+import { useNotificationStore } from '@/store'
 import { useAuth } from '@/composables/useAuth'
 import { getInitials } from '@/utils/formatters'
 
 const { user, logout } = useAuth()
+const notifications = useNotificationStore()
+
+// โหลดครั้งแรกเพื่อแสดงตัวเลขบนกระดิ่ง (ไม่แจ้ง error เพราะไม่ใช่ข้อมูลหลักของหน้า)
+onMounted(() => {
+  if (!notifications.loaded) notifications.fetchAll().catch(() => {})
+})
 </script>

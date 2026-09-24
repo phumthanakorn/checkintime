@@ -51,6 +51,7 @@ src/
     ├── auth/                 LoginForm | LoginView
     ├── home/                 CheckInCard, AttendanceStats, RequestStatusList | HomeView
     ├── history/              HistorySummary, HistoryItem, HistoryDetailSheet | HistoryView
+    ├── notifications/        NotificationItem | NotificationsView
     ├── time-fix/             TimeFixForm, TimeFixItem, TimeFixDetailSheet | TimeFixView
     ├── leave/                LeaveBalanceList, LeaveRequestItem, LeaveRequestForm,
     │                         LeaveDetailSheet | LeaveView
@@ -87,6 +88,9 @@ src/
 | GET | `/time-fix/requests` | คำขอลงเวลาย้อนหลัง |
 | POST | `/time-fix/requests` `{ date, fixType, checkIn, checkOut, reason }` | ขอลงเวลาย้อนหลัง (`fixType`: check_in / check_out / both) |
 | POST | `/time-fix/requests/:id/cancel` | ยกเลิกคำขอที่รออนุมัติ |
+| GET | `/notifications` | การแจ้งเตือน `[{ id, type, title, body, createdAt, read, link }]` |
+| POST | `/notifications/:id/read` | อ่านแล้ว |
+| POST | `/notifications/read-all` | อ่านทั้งหมด |
 | GET | `/requests/status-summary` | `[{ type: 'leave' \| 'advance', pendingCount }]` |
 
 ## Design tokens (PromptChex Design Master v1.0.0)

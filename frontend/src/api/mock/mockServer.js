@@ -7,6 +7,7 @@ import {
   LEAVE_PERIODS,
   LEAVE_STATUS,
   LEAVE_TYPES,
+  NOTIFICATION_TYPES,
   OT_MIN_MINUTES,
   REQUEST_TYPES,
   STORAGE_KEYS,
@@ -15,11 +16,11 @@ import {
   WORK_END_TIME,
   WORK_START_TIME,
 } from '@/utils/constants'
-import { toDateKey, toMonthKey } from '@/utils/formatters'
+import { formatDayMonth, toDateKey, toMonthKey } from '@/utils/formatters'
 import { countWeekdays, isWeekend, toDate } from '@/utils/dates'
 
 // เพิ่มเลขนี้เมื่อเปลี่ยนรูปแบบข้อมูล seed เพื่อให้สร้างข้อมูลใหม่อัตโนมัติ
-const DB_VERSION = 4
+const DB_VERSION = 5
 
 const SEED_USERS = [
   {
@@ -212,7 +213,43 @@ function seed() {
     records.push(forgotOut ? record : withCheckOut(record, atMinutes(day, outMinutes, rand), office))
   }
 
-  return { version: DB_VERSION, users: SEED_USERS, records, requests, nextId }
+  // การแจ้งเตือนตัวอย่าง (สอดคล้องกับคำขอด้านบน)
+  const at = (date, hhmm) => {
+    const d = toDate(typeof date === 'string' ? date : toDateKey(date))
+    const [h, m] = hhmm.split(':').map(Number)
+    d.setHours(h, m, 0, 0)
+    return d.toISOString()
+  }
+  const hoursAgo = (h) => new Date(Date.now() - h * 3600000).toISOString()
+  const notify = (type, title, body, createdAt, read, link = null) => ({
+    id: nextId++,
+    userId,
+    type,
+    title,
+    body,
+    createdAt,
+    read,
+    link,
+  })
+  const sick = requests.find((r) => r.leaveType === LEAVE_TYPES.SICK)
+  const rejectedLeave = requests.find((r) => r.type === REQUEST_TYPES.LEAVE && r.status === LEAVE_STATUS.REJECTED)
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+  const payslipMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1).toLocaleDateString('th-TH', {
+    month: 'long',
+    year: 'numeric',
+  })
+  const notifications = [
+    notify(NOTIFICATION_TYPES.REMINDER, 'อย่าลืมลงเวลาเข้างาน', 'วันนี้เริ่มงาน 09:00 น. แตะเพื่อไปหน้าลงเวลา', hoursAgo(0.3), false, { name: 'home' }),
+    notify(NOTIFICATION_TYPES.ANNOUNCEMENT, 'ประกาศวันหยุดชดเชย', 'บริษัทหยุดชดเชยวันจันทร์ที่ 13 ต.ค. 2569 ขอให้ทุกคนวางแผนงานล่วงหน้า', hoursAgo(3), false),
+    notify(NOTIFICATION_TYPES.REMINDER, 'คุณยังไม่ได้ลงเวลาออกงาน', 'ถ้าลืมกดออกงาน ส่งคำขอลงเวลาย้อนหลังได้เลย', at(forgotOutPending, '19:00'), true, { name: 'time-fix' }),
+    notify(NOTIFICATION_TYPES.PAYSLIP, `สลิปเงินเดือน ${payslipMonth} ออกแล้ว`, 'ดูรายละเอียดรายได้และรายการหักได้ในเมนูสลิป', at(firstOfMonth, '10:00'), false, { name: 'payslip' }),
+    notify(NOTIFICATION_TYPES.LEAVE_APPROVED, 'ใบลาป่วยได้รับการอนุมัติ', `ลาป่วย ${sick.days} วัน (${formatDayMonth(sick.startDate, true)}) หัวหน้าอนุมัติแล้ว`, at(sick.startDate, '11:20'), true, { name: 'leave' }),
+    notify(NOTIFICATION_TYPES.TIME_FIX_REJECTED, 'คำขอลงเวลาย้อนหลังไม่ได้รับอนุมัติ', 'ไม่พบหลักฐานการทำงานหลัง 18:00 กรุณาแนบเอกสารประกอบ', at(toDate(forgotOutRejected).getTime() + 86400000, '14:45'), false, { name: 'time-fix' }),
+    notify(NOTIFICATION_TYPES.LEAVE_REJECTED, 'ใบลากิจไม่ได้รับการอนุมัติ', rejectedLeave.reviewNote, at(toDate(rejectedLeave.startDate).getTime() - 2 * 86400000, '16:30'), true, { name: 'leave' }),
+    notify(NOTIFICATION_TYPES.TIME_FIX_APPROVED, 'คำขอลงเวลาย้อนหลังได้รับอนุมัติ', 'เวลาเข้างาน 08:52 น. ถูกบันทึกในประวัติแล้ว', at(toDate(fixedCheckIn).getTime() + 86400000, '10:15'), true, { name: 'history' }),
+  ]
+
+  return { version: DB_VERSION, users: SEED_USERS, records, requests, notifications, nextId }
 }
 
 function saveDb(db) {
@@ -532,5 +569,34 @@ export const mockRequest = {
       db.requests.filter((r) => r.userId === user.id && r.type === type && r.status === LEAVE_STATUS.PENDING).length
 
     return Object.values(REQUEST_TYPES).map((type) => ({ type, pendingCount: pendingOf(type) }))
+  },
+}
+
+export const mockNotification = {
+  async getAll() {
+    await delay(300)
+    const db = loadDb()
+    const user = currentUser(db)
+    return clone((db.notifications || []).filter((n) => n.userId === user.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
+  },
+
+  async markRead(id) {
+    await delay(100)
+    const db = loadDb()
+    const user = currentUser(db)
+    const item = (db.notifications || []).find((n) => n.id === id && n.userId === user.id)
+    if (!item) fail(404, 'ไม่พบการแจ้งเตือน')
+    item.read = true
+    saveDb(db)
+    return { success: true }
+  },
+
+  async markAllRead() {
+    await delay(200)
+    const db = loadDb()
+    const user = currentUser(db)
+    for (const n of db.notifications || []) if (n.userId === user.id) n.read = true
+    saveDb(db)
+    return { success: true }
   },
 }

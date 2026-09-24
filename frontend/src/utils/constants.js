@@ -129,3 +129,26 @@ export const TIME_FIX_TYPE_LABELS = {
 export const TIME_FIX_MAX_DAYS_BACK = 30
 
 export const TIME_FIX_REASONS = ['ลืมกดลงเวลา', 'โทรศัพท์แบตหมด', 'ออกไปพบลูกค้า', 'ระบบขัดข้อง']
+
+// ---------- การแจ้งเตือน ----------
+
+export const NOTIFICATION_TYPES = {
+  LEAVE_APPROVED: 'leave_approved',
+  LEAVE_REJECTED: 'leave_rejected',
+  TIME_FIX_APPROVED: 'time_fix_approved',
+  TIME_FIX_REJECTED: 'time_fix_rejected',
+  REMINDER: 'reminder',
+  PAYSLIP: 'payslip',
+  ANNOUNCEMENT: 'announcement',
+}
+
+/** ไอคอนและสีของแต่ละประเภท (ไอคอนแสดงในวงกลมสีอ่อน) */
+export const NOTIFICATION_META = {
+  [NOTIFICATION_TYPES.LEAVE_APPROVED]: { icon: 'calendar-check', bg: 'bg-status-checkin/10', color: 'text-status-checkin' },
+  [NOTIFICATION_TYPES.LEAVE_REJECTED]: { icon: 'x-circle', bg: 'bg-status-outside/10', color: 'text-status-outside' },
+  [NOTIFICATION_TYPES.TIME_FIX_APPROVED]: { icon: 'clock-edit', bg: 'bg-violet-50', color: 'text-violet-500' },
+  [NOTIFICATION_TYPES.TIME_FIX_REJECTED]: { icon: 'x-circle', bg: 'bg-status-outside/10', color: 'text-status-outside' },
+  [NOTIFICATION_TYPES.REMINDER]: { icon: 'alarm', bg: 'bg-status-checkout/10', color: 'text-status-checkout' },
+  [NOTIFICATION_TYPES.PAYSLIP]: { icon: 'file-text', bg: 'bg-metric-blue/10', color: 'text-metric-blue' },
+  [NOTIFICATION_TYPES.ANNOUNCEMENT]: { icon: 'megaphone', bg: 'bg-metric-cyan/10', color: 'text-metric-cyan' },
+}

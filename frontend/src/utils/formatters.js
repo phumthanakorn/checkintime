@@ -107,3 +107,18 @@ export function formatLeaveDays(days) {
   if (days === 0.5) return 'ครึ่งวัน'
   return `${days} วัน`
 }
+
+/**
+ * เวลาแบบสัมพัทธ์สำหรับรายการแจ้งเตือน
+ * 'เมื่อสักครู่' | '5 นาทีที่แล้ว' | '3 ชั่วโมงที่แล้ว' | 'เมื่อวาน 18:10' | '12 ก.ย. 09:30'
+ */
+export function formatRelativeTime(date, now = new Date()) {
+  const d = new Date(date)
+  const minutes = Math.floor((now - d) / 60000)
+  if (minutes < 1) return 'เมื่อสักครู่'
+  if (minutes < 60) return `${minutes} นาทีที่แล้ว`
+  const dayDiff = Math.round((toDate(toDateKey(now)) - toDate(toDateKey(d))) / 86400000)
+  if (dayDiff === 0) return `${Math.floor(minutes / 60)} ชั่วโมงที่แล้ว`
+  if (dayDiff === 1) return `เมื่อวาน ${formatClock(d)}`
+  return `${formatDayMonth(d, d.getFullYear() !== now.getFullYear())} ${formatClock(d)}`
+}
