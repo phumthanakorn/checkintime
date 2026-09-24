@@ -1,0 +1,32 @@
+/*
+ * ไม่ใช้ preflight ของ Tailwind (Vuetify มี reset ของตัวเองแล้ว)
+ * และโหลด utilities แบบไม่อยู่ใน layer เพราะสไตล์ที่ไม่อยู่ใน layer จะชนะเสมอ
+ * ถ้าใส่ utilities ไว้ใน layer, reset ของ Vuetify (เช่น `* { padding: 0 }`,
+ * `button { background: transparent }`) จะทับ class อย่าง p-5 / bg-emerald-500
+ */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css';
+
+/*
+ * Design tokens — ตาม PromptChex Design Master v1.0.0
+ * ใช้เป็น class ได้ เช่น bg-status-checkin, text-ink-muted, font-display
+ */
+@theme {
+  /* Typography: Prompt (ภาษาไทย/UI) + Plus Jakarta Sans (ตัวเลข/เวลา/สถิติ) */
+  --font-sans: 'Prompt', 'Noto Sans Thai', sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Prompt', sans-serif;
+
+  /* A. สีประจำสถานะเช็คอิน (Card Status Palette) */
+  --color-status-checkin: #10b981; /* Emerald 500 — กดเข้างาน */
+  --color-status-checkout: #f59e0b; /* Amber 500 — กดออกงาน */
+  --color-status-outside: #f95738; /* Coral Flame — อยู่นอกพื้นที่ */
+  --color-status-done: #334155; /* Slate Dark 700 — เช็คอินครบแล้ว */
+
+  /* B. สีโครงสร้างและไอคอนข้อมูลสถิติ (UI & Supporting Colors) */
+  --color-app-bg: #f8faff; /* พื้นหลังทั้งแอป */
+  --color-card: #ffffff; /* การ์ดสถิติ/รายการ */
+  --color-ink: #0f172a; /* หัวข้อ/ชื่อพนักงาน */
+  --color-ink-muted: #64748b; /* คำอธิบาย/วันที่ */
+  --color-metric-blue: #3b82f6; /* วันลาคงเหลือ */
+  --color-metric-cyan: #06b6d4; /* สถิติ OT รายเดือน */
+}

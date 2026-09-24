@@ -1,0 +1,14 @@
+html,
+body,
+.v-application {
+  font-family: 'Prompt', 'Noto Sans Thai', sans-serif;
+  color: #0f172a;
+}
+
+.v-application {
+  background: #f8faff !important;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

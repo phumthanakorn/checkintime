@@ -1,0 +1,45 @@
+<template>
+  <header class="flex items-center gap-3 px-4 pb-4 pt-6">
+    <v-menu location="bottom start">
+      <template #activator="{ props }">
+        <button v-bind="props" class="shrink-0 rounded-full" aria-label="เมนูผู้ใช้">
+          <img
+            v-if="user?.avatarUrl"
+            :src="user.avatarUrl"
+            :alt="user.name"
+            class="h-11 w-11 rounded-full object-cover"
+          />
+          <span
+            v-else
+            class="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-700"
+          >
+            {{ getInitials(user?.name) }}
+          </span>
+        </button>
+      </template>
+      <v-list density="compact" min-width="180">
+        <v-list-item prepend-icon="mdi-logout" title="ออกจากระบบ" @click="logout" />
+      </v-list>
+    </v-menu>
+
+    <div class="min-w-0 flex-1 leading-tight">
+      <p class="text-[13px] text-ink-muted">สวัสดี</p>
+      <p class="truncate text-lg font-bold leading-snug text-ink">{{ user?.name }}</p>
+      <p class="truncate text-[13px] text-ink-muted">{{ user?.position }}</p>
+    </div>
+
+    <button
+      class="flex h-10 w-10 items-center justify-center rounded-full bg-card text-ink shadow-sm"
+      aria-label="การแจ้งเตือน"
+    >
+      <v-icon icon="mdi-bell-outline" size="22" />
+    </button>
+  </header>
+</template>
+
+<script setup>
+import { useAuth } from '@/composables/useAuth'
+import { getInitials } from '@/utils/formatters'
+
+const { user, logout } = useAuth()
+</script>

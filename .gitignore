@@ -1,0 +1,18 @@
+# Dependencies & build output
+node_modules/
+dist/
+
+# Local env overrides (ค่าที่เป็นความลับให้ใส่ใน .env.local ซึ่งจะไม่ถูก commit)
+*.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
