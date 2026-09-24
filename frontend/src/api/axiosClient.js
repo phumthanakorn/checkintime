@@ -21,8 +21,11 @@ axiosClient.interceptors.response.use(
     if (status === 401) {
       localStorage.removeItem(STORAGE_KEYS.TOKEN)
       localStorage.removeItem(STORAGE_KEYS.USER)
-      if (window.location.pathname !== '/login') {
-        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`
+      // BASE_URL = '/' ตอน dev หรือ '/<repo>/' บน GitHub Pages
+      const base = import.meta.env.BASE_URL
+      const currentPath = window.location.pathname.slice(base.length - 1)
+      if (currentPath !== '/login') {
+        window.location.href = `${base}login?redirect=${encodeURIComponent(currentPath)}`
       }
     }
 
