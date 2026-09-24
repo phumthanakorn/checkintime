@@ -153,6 +153,6 @@ async function doCheckOut() {
 
 function handleSelectRequest(type) {
   if (type === REQUEST_TYPES.LEAVE) router.push({ name: 'leave' })
-  else notify.info('เมนูการเบิกเงินจะเปิดให้ใช้งานเร็ว ๆ นี้')
+  else notify.info('บริการเบิกเงินยังไม่เปิดให้ใช้งาน')
 }
 </script>

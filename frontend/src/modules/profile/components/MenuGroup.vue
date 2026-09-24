@@ -10,12 +10,17 @@
         class="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left transition active:bg-slate-50"
         @click="item.switch === undefined && emit('select', item.key)"
       >
-        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" :class="item.bg">
-          <v-icon :icon="item.icon" size="20" :class="item.color" />
+        <span
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+          :class="item.disabled ? 'bg-slate-100' : item.bg"
+        >
+          <v-icon :icon="item.icon" size="20" :class="item.disabled ? 'text-slate-400' : item.color" />
         </span>
 
         <span class="min-w-0 flex-1">
-          <span class="block text-sm font-medium text-ink">{{ item.label }}</span>
+          <span class="block text-sm font-medium" :class="item.disabled ? 'text-ink-muted' : 'text-ink'">
+            {{ item.label }}
+          </span>
           <span v-if="item.description" class="block truncate text-xs text-ink-muted">{{ item.description }}</span>
         </span>
 
@@ -34,6 +39,12 @@
             class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-card shadow transition peer-checked:translate-x-5"
           />
         </span>
+        <span
+          v-else-if="item.disabled"
+          class="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-ink-muted"
+        >
+          เร็ว ๆ นี้
+        </span>
         <v-icon v-else icon="mdi-chevron-right" size="20" class="text-slate-300" />
       </component>
     </div>
@@ -47,6 +58,7 @@
  *   description?: string,  ข้อความรองใต้ชื่อเมนู
  *   value?: string,        ค่าที่แสดงด้านขวา
  *   switch?: boolean,      ถ้ากำหนด จะแสดงเป็นสวิตช์แทนลูกศร
+ *   disabled?: boolean,    ยังไม่เปิดให้บริการ: สีจาง + ป้าย "เร็ว ๆ นี้"
  * }
  */
 defineProps({

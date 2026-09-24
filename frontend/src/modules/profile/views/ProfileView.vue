@@ -52,7 +52,7 @@ import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useAuthStore } from '@/store'
 import { useAuth } from '@/composables/useAuth'
 import { useNotification } from '@/composables/useNotification'
-import { APP_NAME, APP_VERSION, HR_CONTACT_PHONE, STORAGE_KEYS } from '@/utils/constants'
+import { APP_NAME, APP_VERSION, FEATURES, HR_CONTACT_PHONE, STORAGE_KEYS } from '@/utils/constants'
 
 const auth = useAuthStore()
 const { user, logout } = useAuth()
@@ -91,10 +91,11 @@ const workMenu = [
   {
     key: 'advance',
     label: 'คำขอเบิกเงิน',
-    description: 'ยื่นและติดตามสถานะการเบิก',
+    description: FEATURES.ADVANCE_REQUEST ? 'ยื่นและติดตามสถานะการเบิก' : 'ยังไม่เปิดให้บริการ',
     icon: 'mdi-wallet-outline',
     bg: 'bg-metric-cyan/10',
     color: 'text-metric-cyan',
+    disabled: !FEATURES.ADVANCE_REQUEST,
   },
 ]
 
@@ -166,6 +167,7 @@ function handleSelect(key) {
   if (key === 'payslip') router.push({ name: 'payslip' })
   else if (key === 'history') router.push({ name: 'history' })
   else if (key === 'contact-hr') window.location.href = `tel:${HR_CONTACT_PHONE.replace(/[^\d+]/g, '')}`
+  else if (key === 'advance' && !FEATURES.ADVANCE_REQUEST) notify.info('บริการเบิกเงินยังไม่เปิดให้ใช้งาน')
   else comingSoon()
 }
 

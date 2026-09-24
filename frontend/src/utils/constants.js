@@ -98,3 +98,10 @@ export const LEAVE_PERIOD_LABELS = {
   [LEAVE_PERIODS.MORNING]: 'ครึ่งเช้า',
   [LEAVE_PERIODS.AFTERNOON]: 'ครึ่งบ่าย',
 }
+
+// ---------- เปิด/ปิดฟีเจอร์ ----------
+
+/** ฟีเจอร์ที่ยังไม่เปิดให้บริการจะแสดงเมนูไว้ แต่มีป้าย "เร็ว ๆ นี้" และกดใช้งานไม่ได้ */
+export const FEATURES = {
+  ADVANCE_REQUEST: false, // เบิกเงิน: บริษัทยังไม่เปิดให้บริการ
+}
