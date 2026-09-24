@@ -1,13 +1,14 @@
 <template>
   <button
     type="button"
-    class="flex w-full items-center gap-3 rounded-2xl bg-card p-3 text-left shadow-sm transition active:scale-[0.99]"
+    class="flex w-full items-center gap-3 rounded-2xl p-3 text-left shadow-sm transition active:scale-[0.99]"
+    :class="needsFix ? 'bg-status-outside/5 ring-1 ring-status-outside/20' : 'bg-card'"
     @click="emit('select', record)"
   >
     <!-- วันที่ -->
     <span
       class="flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-xl"
-      :class="isToday ? 'bg-status-checkin text-white' : 'bg-app-bg text-ink'"
+      :class="isToday ? 'bg-status-checkin text-white' : needsFix ? 'bg-card text-ink' : 'bg-app-bg text-ink'"
     >
       <span class="text-[11px]" :class="isToday ? 'text-white/85' : 'text-ink-muted'">
         {{ formatWeekdayShort(record.date) }}
@@ -15,8 +16,17 @@
       <span class="font-display text-xl font-bold leading-none">{{ toDate(record.date).getDate() }}</span>
     </span>
 
+    <!-- วันที่ไม่มีการลงเวลาเลย -->
+    <span v-if="record.missing" class="min-w-0 flex-1">
+      <span class="block text-sm font-semibold text-ink">ไม่มีการลงเวลา</span>
+      <span class="mt-0.5 flex items-center gap-1 text-xs" :class="hasPendingFix(record) ? 'text-metric-blue' : 'text-status-outside'">
+        <v-icon :icon="hasPendingFix(record) ? 'mdi-timer-sand' : 'mdi-gesture-tap'" size="14" />
+        {{ hasPendingFix(record) ? 'ส่งคำขอแล้ว รอหัวหน้าอนุมัติ' : 'แตะเพื่อขอลงเวลาย้อนหลัง' }}
+      </span>
+    </span>
+
     <!-- เวลาเข้า-ออก -->
-    <span class="min-w-0 flex-1">
+    <span v-else class="min-w-0 flex-1">
       <span class="flex items-center gap-3">
         <span class="flex items-center gap-1">
           <v-icon icon="mdi-login" size="14" class="text-status-checkin" />
@@ -41,7 +51,7 @@
 <script setup>
 import { computed } from 'vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
-import { getRecordStatus } from '../recordStatus'
+import { getRecordStatus, hasPendingFix, isIncomplete } from '../recordStatus'
 import { toDate } from '@/utils/dates'
 import { formatClock, formatDuration, formatWeekdayShort, toDateKey } from '@/utils/formatters'
 
@@ -53,4 +63,6 @@ const emit = defineEmits(['select'])
 
 const status = computed(() => getRecordStatus(props.record))
 const isToday = computed(() => props.record.date === toDateKey())
+// ลงเวลาไม่ครบและยังไม่ได้ส่งคำขอ -> เน้นให้เห็น
+const needsFix = computed(() => isIncomplete(props.record) && !hasPendingFix(props.record))
 </script>

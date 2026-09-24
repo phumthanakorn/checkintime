@@ -23,7 +23,12 @@
           ({{ LEAVE_PERIOD_LABELS[request.period] }})
         </span>
       </span>
-      <span class="mt-1 block truncate text-xs text-ink-muted">{{ request.reason }}</span>
+      <span class="mt-1 flex items-center gap-2 text-xs text-ink-muted">
+        <span class="truncate">{{ request.reason }}</span>
+        <span v-if="request.attachments?.length" class="flex shrink-0 items-center gap-0.5">
+          <v-icon icon="mdi-paperclip" size="13" />{{ request.attachments.length }}
+        </span>
+      </span>
     </span>
   </button>
 </template>

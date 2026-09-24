@@ -51,6 +51,7 @@ src/
     ├── auth/                 LoginForm | LoginView
     ├── home/                 CheckInCard, AttendanceStats, RequestStatusList | HomeView
     ├── history/              HistorySummary, HistoryItem, HistoryDetailSheet | HistoryView
+    ├── time-fix/             TimeFixForm, TimeFixItem, TimeFixDetailSheet | TimeFixView
     ├── leave/                LeaveBalanceList, LeaveRequestItem, LeaveRequestForm,
     │                         LeaveDetailSheet | LeaveView
     ├── profile/              ProfileCard, MenuGroup | ProfileView (แท็บ "ฉัน")
@@ -78,11 +79,14 @@ src/
 | POST | `/attendance/check-in` `{ location }` | เข้างาน |
 | POST | `/attendance/check-out` `{ location }` | ออกงาน |
 | GET | `/attendance/summary?month=YYYY-MM` | `{ leaveRemainingDays, lateCount, lateMinutes, otMinutes }` |
-| GET | `/attendance/history?month=YYYY-MM` | ประวัติ |
+| GET | `/attendance/history?month=YYYY-MM` | ประวัติรายวัน + วันที่ขาดลงเวลา (`missing: true`) และ `fixStatus` ของแต่ละวัน |
 | GET | `/leave/balances` | `[{ type, quota, used, pending, remaining }]` |
 | GET | `/leave/requests` | รายการคำขอลา |
 | POST | `/leave/requests` `{ leaveType, startDate, endDate, period, reason }` | ยื่นใบลา |
 | POST | `/leave/requests/:id/cancel` | ยกเลิกคำขอที่รออนุมัติ |
+| GET | `/time-fix/requests` | คำขอลงเวลาย้อนหลัง |
+| POST | `/time-fix/requests` `{ date, fixType, checkIn, checkOut, reason }` | ขอลงเวลาย้อนหลัง (`fixType`: check_in / check_out / both) |
+| POST | `/time-fix/requests/:id/cancel` | ยกเลิกคำขอที่รออนุมัติ |
 | GET | `/requests/status-summary` | `[{ type: 'leave' \| 'advance', pendingCount }]` |
 
 ## Design tokens (PromptChex Design Master v1.0.0)

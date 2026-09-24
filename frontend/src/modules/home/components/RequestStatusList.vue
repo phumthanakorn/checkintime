@@ -56,6 +56,13 @@ const META = {
     color: 'text-status-checkin',
     available: true,
   },
+  [REQUEST_TYPES.TIME_FIX]: {
+    label: 'ขอลงเวลาย้อนหลัง',
+    icon: 'mdi-clock-edit-outline',
+    bg: 'bg-violet-50',
+    color: 'text-violet-500',
+    available: true,
+  },
   [REQUEST_TYPES.ADVANCE]: {
     label: 'การเบิกเงิน',
     icon: 'mdi-wallet',

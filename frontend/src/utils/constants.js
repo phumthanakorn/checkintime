@@ -37,6 +37,7 @@ export const CLOCK_STATE = {
 
 export const REQUEST_TYPES = {
   LEAVE: 'leave',
+  TIME_FIX: 'time_fix',
   ADVANCE: 'advance',
 }
 
@@ -105,3 +106,26 @@ export const LEAVE_PERIOD_LABELS = {
 export const FEATURES = {
   ADVANCE_REQUEST: false, // เบิกเงิน: บริษัทยังไม่เปิดให้บริการ
 }
+
+// ---------- คำขอลงเวลาย้อนหลัง / แก้ไขเวลา ----------
+
+/** สถานะคำขอใช้ชุดเดียวกับการลา */
+export const REQUEST_STATUS = LEAVE_STATUS
+export const REQUEST_STATUS_META = LEAVE_STATUS_META
+
+export const TIME_FIX_TYPES = {
+  CHECK_IN: 'check_in',
+  CHECK_OUT: 'check_out',
+  BOTH: 'both',
+}
+
+export const TIME_FIX_TYPE_LABELS = {
+  [TIME_FIX_TYPES.CHECK_IN]: 'ลืมเข้างาน',
+  [TIME_FIX_TYPES.CHECK_OUT]: 'ลืมออกงาน',
+  [TIME_FIX_TYPES.BOTH]: 'ลืมทั้งคู่',
+}
+
+/** ขอลงเวลาย้อนหลังได้ไม่เกินกี่วัน */
+export const TIME_FIX_MAX_DAYS_BACK = 30
+
+export const TIME_FIX_REASONS = ['ลืมกดลงเวลา', 'โทรศัพท์แบตหมด', 'ออกไปพบลูกค้า', 'ระบบขัดข้อง']

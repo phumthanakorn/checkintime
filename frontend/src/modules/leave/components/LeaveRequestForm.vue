@@ -31,7 +31,7 @@
     </div>
 
     <div>
-      <span class="mb-2 block text-sm font-medium text-ink">เหตุผลการลา</span>
+      <span class="mb-2 block text-sm font-medium text-ink">เหตุผลการลา <span class="text-status-outside">*</span></span>
       <textarea
         v-model="form.reason"
         rows="3"
@@ -41,6 +41,15 @@
       />
       <p class="text-right text-[11px] text-ink-muted">{{ form.reason.length }}/200</p>
     </div>
+
+    <AttachmentField
+      v-model="form.attachments"
+      :hint="
+        form.leaveType === LEAVE_TYPES.SICK
+          ? 'ลาป่วยตั้งแต่ 3 วันขึ้นไป ควรแนบใบรับรองแพทย์'
+          : 'เช่น ใบนัดหมาย หรือเอกสารประกอบการลา'
+      "
+    />
 
     <!-- สรุป -->
     <div class="flex items-center justify-between rounded-2xl bg-app-bg px-4 py-3">
@@ -58,6 +67,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import SegmentedTabs from '@/components/common/SegmentedTabs.vue'
+import AttachmentField from '@/components/common/AttachmentField.vue'
 import DateRangeField from '@/components/common/DateRangeField.vue'
 import { LEAVE_PERIOD_LABELS, LEAVE_PERIODS, LEAVE_TYPE_META, LEAVE_TYPES } from '@/utils/constants'
 import { countWeekdays } from '@/utils/dates'
@@ -77,6 +87,7 @@ const form = reactive({
   endDate: today,
   period: LEAVE_PERIODS.FULL,
   reason: '',
+  attachments: [],
 })
 const error = ref('')
 
@@ -130,6 +141,7 @@ function reset() {
     endDate: today,
     period: LEAVE_PERIODS.FULL,
     reason: '',
+    attachments: [],
   })
   error.value = ''
 }

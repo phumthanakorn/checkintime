@@ -153,6 +153,7 @@ async function doCheckOut() {
 
 function handleSelectRequest(type) {
   if (type === REQUEST_TYPES.LEAVE) router.push({ name: 'leave' })
+  else if (type === REQUEST_TYPES.TIME_FIX) router.push({ name: 'time-fix' })
   else notify.info('บริการเบิกเงินยังไม่เปิดให้ใช้งาน')
 }
 </script>

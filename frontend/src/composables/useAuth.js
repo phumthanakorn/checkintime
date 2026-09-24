@@ -1,11 +1,12 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAttendanceStore, useAuthStore, useLeaveStore } from '@/store'
+import { useAttendanceStore, useAuthStore, useLeaveStore, useTimeFixStore } from '@/store'
 
 export function useAuth() {
   const auth = useAuthStore()
   const attendance = useAttendanceStore()
   const leave = useLeaveStore()
+  const timeFix = useTimeFixStore()
   const router = useRouter()
   const route = useRoute()
 
@@ -24,6 +25,7 @@ export function useAuth() {
     await auth.logout()
     attendance.reset()
     leave.reset()
+    timeFix.reset()
     await router.replace({ name: 'login' })
   }
 

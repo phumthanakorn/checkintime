@@ -89,6 +89,14 @@ const workMenu = [
     color: 'text-violet-500',
   },
   {
+    key: 'time-fix',
+    label: 'ขอลงเวลาย้อนหลัง',
+    description: 'กรณีลืมลงเวลาเข้า-ออกงาน',
+    icon: 'mdi-clock-edit-outline',
+    bg: 'bg-violet-50',
+    color: 'text-violet-500',
+  },
+  {
     key: 'advance',
     label: 'คำขอเบิกเงิน',
     description: FEATURES.ADVANCE_REQUEST ? 'ยื่นและติดตามสถานะการเบิก' : 'ยังไม่เปิดให้บริการ',
@@ -166,6 +174,7 @@ function comingSoon() {
 function handleSelect(key) {
   if (key === 'payslip') router.push({ name: 'payslip' })
   else if (key === 'history') router.push({ name: 'history' })
+  else if (key === 'time-fix') router.push({ name: 'time-fix' })
   else if (key === 'contact-hr') window.location.href = `tel:${HR_CONTACT_PHONE.replace(/[^\d+]/g, '')}`
   else if (key === 'advance' && !FEATURES.ADVANCE_REQUEST) notify.info('บริการเบิกเงินยังไม่เปิดให้ใช้งาน')
   else comingSoon()

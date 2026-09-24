@@ -26,6 +26,12 @@ const routes = [
     meta: { layout: 'main', requiresAuth: true, hideHeader: true, title: 'ประวัติ' },
   },
   {
+    path: '/time-fix',
+    name: 'time-fix',
+    component: () => import('@/modules/time-fix/views/TimeFixView.vue'),
+    meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'history', title: 'ขอลงเวลาย้อนหลัง' },
+  },
+  {
     path: '/leave',
     name: 'leave',
     component: () => import('@/modules/leave/views/LeaveView.vue'),

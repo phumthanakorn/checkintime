@@ -36,6 +36,25 @@
 
     <template #footer>
       <button
+        v-if="record && hasPendingFix(record)"
+        type="button"
+        class="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-metric-blue/10 text-sm font-semibold text-metric-blue"
+        @click="emit('request-fix', record)"
+      >
+        <v-icon icon="mdi-timer-sand" size="18" />
+        มีคำขอแก้ไขรออนุมัติ · ดูคำขอ
+      </button>
+      <button
+        v-else-if="record && isIncomplete(record)"
+        type="button"
+        class="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-status-checkin text-sm font-semibold text-white shadow-lg shadow-status-checkin/30"
+        @click="emit('request-fix', record)"
+      >
+        <v-icon icon="mdi-clock-edit-outline" size="18" />
+        ขอลงเวลาออกย้อนหลัง
+      </button>
+      <button
+        v-else
         type="button"
         class="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 text-sm font-semibold text-ink"
         @click="emit('request-fix', record)"
@@ -51,7 +70,7 @@
 import { computed } from 'vue'
 import AppBottomSheet from '@/components/common/AppBottomSheet.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
-import { getRecordStatus } from '../recordStatus'
+import { getRecordStatus, hasPendingFix, isIncomplete } from '../recordStatus'
 import { formatClock, formatDuration, formatThaiDate } from '@/utils/formatters'
 
 const open = defineModel({ type: Boolean, default: false })

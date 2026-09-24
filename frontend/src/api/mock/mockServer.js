@@ -10,6 +10,8 @@ import {
   OT_MIN_MINUTES,
   REQUEST_TYPES,
   STORAGE_KEYS,
+  TIME_FIX_MAX_DAYS_BACK,
+  TIME_FIX_TYPES,
   WORK_END_TIME,
   WORK_START_TIME,
 } from '@/utils/constants'
@@ -17,7 +19,7 @@ import { toDateKey, toMonthKey } from '@/utils/formatters'
 import { countWeekdays, isWeekend, toDate } from '@/utils/dates'
 
 // เพิ่มเลขนี้เมื่อเปลี่ยนรูปแบบข้อมูล seed เพื่อให้สร้างข้อมูลใหม่อัตโนมัติ
-const DB_VERSION = 3
+const DB_VERSION = 4
 
 const SEED_USERS = [
   {
@@ -165,12 +167,40 @@ function seed() {
     }
   }
 
+  // ตัวอย่างวันที่ลืมลงเวลา
+  const forgotOutPending = toDateKey(daysFrom(-3)) // ลืมออกงาน + ส่งคำขอแล้ว (รออนุมัติ)
+  const missingDay = toDateKey(daysFrom(-6)) // ไม่มีการลงเวลาเลย ยังไม่ได้ส่งคำขอ
+  const fixedCheckIn = toDateKey(daysFrom(-12)) // ลืมเข้างาน คำขออนุมัติแล้ว
+  const forgotOutRejected = toDateKey(daysFrom(-18)) // ลืมออกงาน คำขอไม่อนุมัติ
+
+  const timeFix = (date, fixType, times, status, reason, extra = {}) => ({
+    id: nextId++,
+    userId,
+    type: REQUEST_TYPES.TIME_FIX,
+    date,
+    fixType,
+    checkIn: times.checkIn || null,
+    checkOut: times.checkOut || null,
+    reason,
+    status,
+    reviewNote: extra.reviewNote || null,
+    createdAt: new Date(Math.min(toDate(date).getTime() + 33 * 3600000, Date.now() - 3600000)).toISOString(),
+  })
+  requests.push(
+    timeFix(forgotOutPending, TIME_FIX_TYPES.CHECK_OUT, { checkOut: '18:10' }, LEAVE_STATUS.PENDING, 'ลืมกดลงเวลา'),
+    timeFix(fixedCheckIn, TIME_FIX_TYPES.CHECK_IN, { checkIn: '08:52' }, LEAVE_STATUS.APPROVED, 'โทรศัพท์แบตหมด'),
+    timeFix(forgotOutRejected, TIME_FIX_TYPES.CHECK_OUT, { checkOut: '19:30' }, LEAVE_STATUS.REJECTED, 'ออกไปพบลูกค้า', {
+      reviewNote: 'ไม่พบหลักฐานการทำงานหลัง 18:00 กรุณาแนบเอกสารประกอบ',
+    }),
+  )
+
   // ประวัติลงเวลาย้อนหลัง ~2 เดือน (ไม่รวมวันนี้)
   const records = []
   for (let i = 62; i >= 1; i--) {
     const day = new Date(today)
     day.setDate(day.getDate() - i)
-    if (isWeekend(day) || leaveDays.has(toDateKey(day))) continue
+    const key = toDateKey(day)
+    if (isWeekend(day) || leaveDays.has(key) || key === missingDay) continue
 
     const late = rand() < 0.15
     const inMinutes = late ? 9 * 60 + 1 + Math.floor(rand() * 25) : 8 * 60 + 30 + Math.floor(rand() * 29)
@@ -178,14 +208,28 @@ function seed() {
     const outMinutes = overtime ? 18 * 60 + 30 + Math.floor(rand() * 90) : 18 * 60 + Math.floor(rand() * 15)
 
     const record = buildRecord(nextId++, userId, atMinutes(day, inMinutes, rand), office)
-    records.push(withCheckOut(record, atMinutes(day, outMinutes, rand), office))
+    const forgotOut = key === forgotOutPending || key === forgotOutRejected
+    records.push(forgotOut ? record : withCheckOut(record, atMinutes(day, outMinutes, rand), office))
   }
 
   return { version: DB_VERSION, users: SEED_USERS, records, requests, nextId }
 }
 
 function saveDb(db) {
-  localStorage.setItem(STORAGE_KEYS.MOCK_DB, JSON.stringify(db))
+  try {
+    localStorage.setItem(STORAGE_KEYS.MOCK_DB, JSON.stringify(db))
+  } catch {
+    // localStorage เต็ม (ส่วนใหญ่มาจากไฟล์แนบ) — เฉพาะโหมดทดลอง
+    fail(413, 'พื้นที่เก็บข้อมูลทดลองในเบราว์เซอร์เต็ม ลองแนบไฟล์ให้น้อยลง')
+  }
+}
+
+const MAX_ATTACHMENTS = 3
+
+/** เก็บเฉพาะฟิลด์ที่ต้องใช้ของไฟล์แนบ */
+function sanitizeAttachments(attachments = []) {
+  if (attachments.length > MAX_ATTACHMENTS) fail(400, `แนบไฟล์ได้ไม่เกิน ${MAX_ATTACHMENTS} ไฟล์`)
+  return attachments.map(({ id, name, type, size, dataUrl }) => ({ id, name, type, size, dataUrl }))
 }
 
 function loadDb() {
@@ -216,6 +260,20 @@ function findToday(db, userId) {
 
 function leaveRequestsOf(db, userId) {
   return db.requests.filter((r) => r.userId === userId && r.type === REQUEST_TYPES.LEAVE)
+}
+
+function timeFixRequestsOf(db, userId) {
+  return db.requests.filter((r) => r.userId === userId && r.type === REQUEST_TYPES.TIME_FIX)
+}
+
+/** วันที่ลาเต็มวันที่อนุมัติแล้ว (Set ของ 'YYYY-MM-DD') */
+function approvedLeaveDays(db, userId) {
+  const days = new Set()
+  for (const r of leaveRequestsOf(db, userId)) {
+    if (r.status !== LEAVE_STATUS.APPROVED || r.period !== LEAVE_PERIODS.FULL) continue
+    for (let d = toDate(r.startDate); d <= toDate(r.endDate); d.setDate(d.getDate() + 1)) days.add(toDateKey(d))
+  }
+  return days
 }
 
 /** โควตา/ใช้ไป/รออนุมัติ/คงเหลือ ของแต่ละประเภทการลา ในปีปัจจุบัน */
@@ -305,15 +363,100 @@ export const mockAttendance = {
     }
   },
 
-  async getHistory({ month } = {}) {
+  /**
+   * ประวัติรายวันของเดือน: รายการลงเวลา + วันทำงานที่ไม่มีการลงเวลา (missing: true)
+   * แต่ละวันมี fixStatus = สถานะคำขอแก้ไขเวลาล่าสุดของวันนั้น (ถ้ามี)
+   */
+  async getHistory({ month = toMonthKey() } = {}) {
     await delay()
     const db = loadDb()
     const user = currentUser(db)
+    const records = db.records.filter((r) => r.userId === user.id)
+    const monthRecords = records.filter((r) => r.date.startsWith(month))
+
+    // วันทำงานที่ผ่านมาแล้วแต่ไม่มีการลงเวลา (ไม่นับวันลาเต็มวันที่อนุมัติ และก่อนเริ่มมีข้อมูล)
+    const recordDates = new Set(monthRecords.map((r) => r.date))
+    const leaveDays = approvedLeaveDays(db, user.id)
+    const firstTracked = records.reduce((min, r) => (r.date < min ? r.date : min), toDateKey())
+    const [y, m] = month.split('-').map(Number)
+    const missing = []
+    for (let d = new Date(y, m - 1, 1); d.getMonth() === m - 1; d.setDate(d.getDate() + 1)) {
+      const key = toDateKey(d)
+      if (key >= toDateKey() || key < firstTracked) continue
+      if (isWeekend(d) || recordDates.has(key) || leaveDays.has(key)) continue
+      missing.push({ id: `missing-${key}`, date: key, missing: true, checkIn: null, checkOut: null, lateMinutes: 0, otMinutes: 0, workMinutes: null })
+    }
+
+    const fixStatusOf = (date) =>
+      timeFixRequestsOf(db, user.id)
+        .filter((r) => r.date === date)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]?.status ?? null
+
     return clone(
-      db.records
-        .filter((r) => r.userId === user.id && (!month || r.date.startsWith(month)))
+      [...monthRecords, ...missing]
+        .map((r) => ({ ...r, fixStatus: fixStatusOf(r.date) }))
         .sort((a, b) => b.date.localeCompare(a.date)),
     )
+  },
+}
+
+export const mockTimeFix = {
+  async getRequests() {
+    await delay()
+    const db = loadDb()
+    return clone(timeFixRequestsOf(db, currentUser(db).id).sort((a, b) => b.date.localeCompare(a.date)))
+  },
+
+  async createRequest({ date, fixType, checkIn, checkOut, reason, attachments }) {
+    await delay(500)
+    const db = loadDb()
+    const user = currentUser(db)
+    const today = toDateKey()
+    const earliest = new Date()
+    earliest.setDate(earliest.getDate() - TIME_FIX_MAX_DAYS_BACK)
+
+    if (!date || date > today) fail(400, 'วันที่ไม่ถูกต้อง')
+    if (date < toDateKey(earliest)) fail(400, `ขอลงเวลาย้อนหลังได้ไม่เกิน ${TIME_FIX_MAX_DAYS_BACK} วัน`)
+    if (!Object.values(TIME_FIX_TYPES).includes(fixType)) fail(400, 'กรุณาเลือกประเภทคำขอ')
+    const needIn = fixType !== TIME_FIX_TYPES.CHECK_OUT
+    const needOut = fixType !== TIME_FIX_TYPES.CHECK_IN
+    if ((needIn && !checkIn) || (needOut && !checkOut)) fail(400, 'กรุณาระบุเวลา')
+    if (needIn && needOut && checkOut <= checkIn) fail(400, 'เวลาออกงานต้องหลังเวลาเข้างาน')
+    if (!reason?.trim()) fail(400, 'กรุณาระบุเหตุผล')
+    if (timeFixRequestsOf(db, user.id).some((r) => r.date === date && r.status === LEAVE_STATUS.PENDING)) {
+      fail(409, 'วันนี้มีคำขอแก้ไขเวลารออนุมัติอยู่แล้ว')
+    }
+
+    const request = {
+      id: db.nextId++,
+      userId: user.id,
+      type: REQUEST_TYPES.TIME_FIX,
+      date,
+      fixType,
+      checkIn: needIn ? checkIn : null,
+      checkOut: needOut ? checkOut : null,
+      reason: reason.trim(),
+      attachments: sanitizeAttachments(attachments),
+      status: LEAVE_STATUS.PENDING,
+      reviewNote: null,
+      createdAt: new Date().toISOString(),
+    }
+    db.requests.push(request)
+    saveDb(db)
+    return clone(request)
+  },
+
+  async cancelRequest(id) {
+    await delay()
+    const db = loadDb()
+    const user = currentUser(db)
+    const request = db.requests.find((r) => r.id === id && r.userId === user.id && r.type === REQUEST_TYPES.TIME_FIX)
+    if (!request) fail(404, 'ไม่พบคำขอ')
+    if (request.status !== LEAVE_STATUS.PENDING) fail(409, 'ยกเลิกได้เฉพาะคำขอที่รออนุมัติ')
+
+    request.status = LEAVE_STATUS.CANCELLED
+    saveDb(db)
+    return clone(request)
   },
 }
 
@@ -330,7 +473,7 @@ export const mockLeave = {
     return clone(leaveRequestsOf(db, currentUser(db).id).sort((a, b) => b.startDate.localeCompare(a.startDate)))
   },
 
-  async createRequest({ leaveType, startDate, endDate, period = LEAVE_PERIODS.FULL, reason }) {
+  async createRequest({ leaveType, startDate, endDate, period = LEAVE_PERIODS.FULL, reason, attachments }) {
     await delay(500)
     const db = loadDb()
     const user = currentUser(db)
@@ -355,6 +498,7 @@ export const mockLeave = {
       period,
       days,
       reason: reason.trim(),
+      attachments: sanitizeAttachments(attachments),
       status: LEAVE_STATUS.PENDING,
       reviewNote: null,
       createdAt: new Date().toISOString(),
