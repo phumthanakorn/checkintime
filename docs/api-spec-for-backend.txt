@@ -1,0 +1,485 @@
+===============================================================================
+ CheckInTime - เอกสาร API สำหรับทีม Backend
+ เวอร์ชันเอกสาร: 1.0 (25 ก.ย. 2569)
+ Frontend: https://github.com/phumthanakorn/checkintime  (โฟลเดอร์ frontend/)
+ ตัวอย่างหน้าเว็บ (ข้อมูลจำลอง): https://phumthanakorn.github.io/checkintime/
+===============================================================================
+
+สารบัญ
+  1. ภาพรวม และสิ่งที่ Frontend คาดหวัง
+  2. ข้อตกลงร่วม (Auth, รูปแบบ Error, เวลา, Status code)
+  3. โครงสร้างข้อมูล (Data models)
+  4. API ของแอปพนักงาน (Frontend เรียกใช้อยู่แล้ว)  <-- ต้องทำก่อน
+  5. กฎการคำนวณ (Business rules)
+  6. API ฝั่งหัวหน้า / อนุมัติ (ยังไม่มีหน้าจอ)
+  7. API เชื่อมต่อระบบอื่น (Integrations) - ร่าง
+  8. Webhooks - ร่าง
+  9. ภาคผนวก: HTTP Method คืออะไร
+  10. หมายเหตุ / สิ่งที่ยังต้องตัดสินใจ
+
+
+-------------------------------------------------------------------------------
+1. ภาพรวม และสิ่งที่ Frontend คาดหวัง
+-------------------------------------------------------------------------------
+
+- Frontend เป็น Vue 3 (Mobile Web) ตอนนี้ใช้ Mock API ที่เก็บข้อมูลใน localStorage
+  โค้ด Mock อยู่ที่ frontend/src/api/mock/mockServer.js  <-- ใช้อ้างอิง logic และรูปแบบข้อมูลได้เลย
+- เมื่อ Backend พร้อม ให้ตั้งค่าใน frontend/.env
+      VITE_USE_MOCK=false
+      VITE_API_BASE_URL=/api        (dev server proxy /api -> http://localhost:3000)
+- ทุกเส้นใน API ข้อ 4 อยู่ใต้ base URL เช่น GET /api/attendance/today
+- ไฟล์ที่ Frontend เรียก API: frontend/src/api/services/*.js
+
+โครงสร้างระบบโดยรวม
+
+    แอปพนักงาน (มือถือ / LINE)  ---->  /api/...               (ข้อ 4, 6)
+    ระบบ HR / เครื่องสแกนนิ้ว     ---->  /integrations/v1/...   (ข้อ 7 ส่งข้อมูลเข้า)
+    ระบบเงินเดือน               <----  /integrations/v1/...   (ข้อ 7 ดึงข้อมูลออก)
+    ระบบอื่น ๆ                   <----  Webhooks               (ข้อ 8)
+
+
+-------------------------------------------------------------------------------
+2. ข้อตกลงร่วม
+-------------------------------------------------------------------------------
+
+2.1 Authentication (แอป)
+    - Login สำเร็จคืน { token, user }
+    - Frontend ส่ง token ทุก request:   Authorization: Bearer <token>
+    - ถ้าได้ 401 Frontend จะลบ token แล้วพาไปหน้า login เอง
+
+2.2 Response
+    - ตอบเป็น JSON ของข้อมูลตรง ๆ ไม่ต้องห่อด้วย { data: ... }
+      (frontend/src/api/axiosClient.js คืนค่า response.data ให้หน้าจอทันที)
+    - GET ที่ไม่พบข้อมูลของวันนี้ ให้คืน null (เช่น /attendance/today ถ้ายังไม่ลงเวลา)
+
+2.3 Error
+    - HTTP status ตามความหมาย (ตารางด้านล่าง) และ body รูปแบบนี้:
+        { "message": "วันนี้คุณลงเวลาเข้างานไปแล้ว", "code": "ALREADY_CHECKED_IN" }
+    - Frontend แสดง "message" ให้ผู้ใช้ตรง ๆ  -> เขียนเป็นภาษาไทยที่ผู้ใช้อ่านเข้าใจ
+    - "code" (ภาษาอังกฤษ) ไว้ให้โปรแกรมตรวจสอบ / log
+
+2.4 วันที่และเวลา
+    - วันที่อย่างเดียว:  "YYYY-MM-DD"     เช่น "2026-09-25"
+    - เดือน:           "YYYY-MM"        เช่น "2026-09"
+    - เวลาอย่างเดียว:   "HH:mm"          เช่น "08:52"
+    - วันที่+เวลา:      ISO 8601 พร้อมโซน เช่น "2026-09-25T08:52:10+07:00"
+    - โซนเวลาหลักของบริษัท: Asia/Bangkok (+07:00)
+    - ปี ใช้ ค.ศ. ใน API เสมอ (Frontend แปลงเป็น พ.ศ. เอง)
+
+2.5 Status code ที่ใช้
+    200 OK              สำเร็จ
+    201 Created         สร้างรายการใหม่สำเร็จ (ยื่นใบลา ฯลฯ)
+    400 Bad Request     ข้อมูลไม่ถูกต้อง (validation)
+    401 Unauthorized    ยังไม่ login / token หมดอายุ / รหัสผ่านผิด
+    403 Forbidden       ไม่มีสิทธิ์ (เช่น พนักงานพยายามอนุมัติ)
+    404 Not Found       ไม่พบข้อมูล (เช่น สลิปเดือนที่ยังไม่ออก)
+    409 Conflict        ขัดกับข้อมูลที่มีอยู่ (กดเข้างานซ้ำ, ส่งคำขอซ้ำ)
+    413 Payload Too Large  ไฟล์แนบใหญ่เกิน
+    500 Server Error    ข้อผิดพลาดฝั่ง server
+
+
+-------------------------------------------------------------------------------
+3. โครงสร้างข้อมูล (Data models)
+-------------------------------------------------------------------------------
+
+3.1 User (ข้อมูลผู้ใช้ที่ส่งให้แอป - ห้ามส่ง password / pin)
+{
+  "id": 1,
+  "employeeCode": "EMP-2569001",
+  "email": "somchai@company.com",
+  "name": "นาย สมชาย ใจดี",
+  "position": "พนักงานขาย",
+  "department": "ฝ่ายขาย",
+  "phone": "081-234-5678",
+  "startDate": "2024-03-01",
+  "avatarUrl": null,                         // URL รูป หรือ null
+  "address": "99/12 ถ.พหลโยธิน ...",
+  "emergencyContact": { "name": "นาง สมศรี ใจดี", "relation": "มารดา", "phone": "089-765-4321" },
+  "hasPin": false                            // ตั้ง PIN ไว้หรือยัง
+}
+
+3.2 AttendanceRecord (การลงเวลา 1 วัน)
+{
+  "id": 101,
+  "date": "2026-09-25",
+  "checkIn": "2026-09-25T08:52:10+07:00",
+  "checkOut": "2026-09-25T18:05:00+07:00",    // null = ยังไม่ลงเวลาออก
+  "checkInLocation":  { "lat": 13.7563, "lng": 100.5018, "accuracy": 15 },   // หรือ null
+  "checkOutLocation": { "lat": 13.7563, "lng": 100.5018, "accuracy": 12 },   // หรือ null
+  "lateMinutes": 0,                          // นาทีที่สาย (ดูข้อ 5)
+  "workMinutes": 553,                        // null ถ้ายังไม่ออกงาน
+  "otMinutes": 0                             // นาที OT (ดูข้อ 5)
+}
+ใน /attendance/history มีฟิลด์เพิ่ม:
+  "missing": true      -> วันทำงานที่ไม่มีการลงเวลาเลย (checkIn/checkOut = null)
+  "fixStatus": "pending" | "approved" | "rejected" | "cancelled" | null
+                       -> สถานะคำขอลงเวลาย้อนหลังล่าสุดของวันนั้น
+
+3.3 LeaveRequest (ใบลา)
+{
+  "id": 1234,
+  "type": "leave",
+  "leaveType": "vacation" | "personal" | "sick",    // พักร้อน | กิจ | ป่วย
+  "startDate": "2026-09-26",
+  "endDate": "2026-09-26",
+  "period": "full" | "morning" | "afternoon",       // ครึ่งวันได้เฉพาะลาวันเดียว
+  "days": 1,                                        // 0.5 ถ้าลาครึ่งวัน
+  "reason": "มีไข้ ไปพบแพทย์",
+  "attachments": [ Attachment ],
+  "status": "pending" | "approved" | "rejected" | "cancelled",
+  "reviewNote": null,                               // หมายเหตุจากหัวหน้า (ถ้าไม่อนุมัติ)
+  "createdAt": "2026-09-25T09:10:00+07:00"
+}
+
+3.4 TimeFixRequest (คำขอลงเวลาย้อนหลัง / ลืมลงเวลา)
+{
+  "id": 88,
+  "type": "time_fix",
+  "date": "2026-09-18",
+  "fixType": "check_in" | "check_out" | "both",
+  "checkIn": "08:30",        // "HH:mm" หรือ null (ถ้า fixType = check_out)
+  "checkOut": "18:30",       // "HH:mm" หรือ null (ถ้า fixType = check_in)
+  "reason": "ลืมกดลงเวลา",
+  "attachments": [ Attachment ],
+  "status": "pending" | "approved" | "rejected" | "cancelled",
+  "reviewNote": null,
+  "createdAt": "2026-09-19T09:00:00+07:00"
+}
+
+3.5 Attachment (ไฟล์แนบ)
+{
+  "id": "1727242200-0",
+  "name": "ใบรับรองแพทย์.jpg",
+  "type": "image/jpeg" | "image/png" | "application/pdf",
+  "size": 182334,             // bytes
+  "dataUrl": "data:image/jpeg;base64,..."    // ตอนนี้ Frontend ส่งเป็น base64 (ดูข้อ 10)
+}
+
+3.6 Notification
+{
+  "id": 501,
+  "type": "leave_approved" | "leave_rejected" | "time_fix_approved" | "time_fix_rejected"
+        | "reminder" | "payslip" | "announcement",
+  "title": "ใบลาป่วยได้รับการอนุมัติ",
+  "body": "ลาป่วย 1 วัน (16 ก.ย. 2569) หัวหน้าอนุมัติแล้ว",
+  "createdAt": "2026-09-16T11:20:00+07:00",
+  "read": false,
+  "link": { "name": "leave" }      // หน้าที่จะเปิดเมื่อแตะ หรือ null
+}
+ค่า link.name ที่ Frontend รองรับ:
+  home, history, time-fix, leave, payslip, notifications, profile
+
+3.7 Payslip
+{
+  "month": "2026-09",
+  "payDate": "2026-09-25",
+  "employee": { "name": "...", "employeeCode": "...", "position": "...", "department": "..." },
+  "bank": { "name": "ธนาคารกสิกรไทย", "account": "xxx-x-x4821-x" },     // ปิดบังเลขบัญชีบางส่วน
+  "earnings":   [ { "label": "เงินเดือน", "amount": 18000 },
+                  { "label": "ค่าล่วงเวลา (OT)", "amount": 421.88, "note": "3.75 ชม. × 1.5 เท่า" } ],
+  "deductions": [ { "label": "ประกันสังคม", "amount": 750, "note": "5% (สูงสุด 750 บาท)" } ],
+  "totalEarnings": 19421.88,
+  "totalDeductions": 1675,
+  "netPay": 17746.88,
+  "attendance": { "workDays": 15, "leaveDays": 2, "absentDays": 1,
+                  "lateCount": 1, "lateMinutes": 4, "otMinutes": 225 }
+}
+หมายเหตุ: note เป็นข้อความอธิบายเพิ่มเติม (ไม่บังคับ)
+
+
+-------------------------------------------------------------------------------
+4. API ของแอปพนักงาน (Frontend เรียกใช้อยู่แล้ว)
+-------------------------------------------------------------------------------
+[Auth] = ต้องมี Bearer token
+
+4.1 บัญชีผู้ใช้ / เข้าสู่ระบบ   (frontend/src/api/services/authService.js)
+
+  POST   /auth/login
+         body: { "username": "EMP-2569001 หรืออีเมล", "password": "..." }
+         200:  { "token": "...", "user": User }
+         401:  รหัสพนักงาน/อีเมล หรือรหัสผ่านไม่ถูกต้อง
+
+  POST   /auth/login/pin
+         body: { "employeeCode": "EMP-2569001", "pin": "135790" }
+         200:  { "token": "...", "user": User }
+         400:  ยังไม่ได้ตั้งค่า PIN   |  401: PIN ไม่ถูกต้อง
+         * ควรล็อกชั่วคราวเมื่อใส่ผิดหลายครั้ง (Frontend ล็อกเองที่ 5 ครั้ง แต่ต้องกันที่ server ด้วย)
+
+  GET    /auth/me                                   [Auth]   200: User
+  POST   /auth/logout                               [Auth]   200: { "success": true }
+
+  PUT    /me/profile                                [Auth]
+         body: { "phone", "email", "address", "avatarUrl",
+                 "emergencyContact": { "name", "relation", "phone" } }
+         200:  User (ข้อมูลล่าสุด)
+         * ชื่อ ตำแหน่ง แผนก วันเริ่มงาน แก้ได้โดย HR เท่านั้น (ห้ามรับจากเส้นนี้)
+         * avatarUrl ตอนนี้ Frontend ส่งเป็น data URL (base64 ย่อแล้ว ~400px) ดูข้อ 10
+
+  POST   /me/password                               [Auth]
+         body: { "currentPassword": "...", "newPassword": "..." }
+         400:  รหัสผ่านปัจจุบันไม่ถูกต้อง / รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านเดิม
+         กฎรหัสผ่านใหม่: อย่างน้อย 8 ตัว มีทั้งตัวอักษรและตัวเลข
+
+  POST   /me/pin                                    [Auth]   body: { "pin": "6 หลัก" }
+  DELETE /me/pin                                    [Auth]   ปิดการใช้ PIN
+         * เก็บ PIN แบบ hash เท่านั้น (เหมือนรหัสผ่าน)
+
+  ลืมรหัสผ่าน (3 ขั้น)
+  POST   /auth/password/forgot
+         body: { "username": "..." }
+         200:  { "maskedPhone": "081-xxx-5678", "refCode": "K7QX", "expiresIn": 300 }
+         404:  ไม่พบรหัสพนักงานหรืออีเมลนี้ในระบบ
+         * ส่ง OTP 6 หลักทาง SMS; Frontend ให้กดส่งใหม่ได้ทุก 60 วินาที -> ควร rate limit
+  POST   /auth/password/verify-otp
+         body: { "username": "...", "otp": "123456" }
+         200:  { "resetToken": "..." }        400: รหัส OTP ไม่ถูกต้อง
+  POST   /auth/password/reset
+         body: { "resetToken": "...", "newPassword": "..." }
+         200:  { "success": true }            400: ลิงก์หมดอายุ
+
+4.2 ลงเวลา   (attendanceService.js)
+
+  GET    /attendance/today                          [Auth]
+         200:  AttendanceRecord ของวันนี้ หรือ null
+
+  POST   /attendance/check-in                       [Auth]
+         body: { "location": { "lat", "lng", "accuracy" } | null }
+         201:  AttendanceRecord
+         409:  วันนี้คุณลงเวลาเข้างานไปแล้ว
+         403:  อยู่นอกพื้นที่ (ถ้าบังคับ geofence ที่ server)
+
+  POST   /attendance/check-out                      [Auth]
+         body: { "location": ... | null }
+         200:  AttendanceRecord (มี checkOut, workMinutes, otMinutes)
+         400:  กรุณาลงเวลาเข้างานก่อน     409: ลงเวลาออกไปแล้ว
+
+  GET    /attendance/summary?month=YYYY-MM          [Auth]
+         200:  { "leaveRemainingDays": 17.5, "lateCount": 1, "lateMinutes": 22, "otMinutes": 131 }
+         * leaveRemainingDays = ลาพักร้อน + ลากิจ คงเหลือ (ไม่รวมลาป่วย) ใช้แสดงหน้าหลัก
+
+  GET    /attendance/history?month=YYYY-MM          [Auth]
+         200:  [ AttendanceRecord + missing + fixStatus ] เรียงวันที่ใหม่ -> เก่า
+         * ต้องรวม "วันทำงานที่ไม่มีการลงเวลา" (missing: true) ด้วย
+           ไม่นับ: เสาร์-อาทิตย์, วันหยุดบริษัท, วันลาเต็มวันที่อนุมัติ, วันนี้, วันในอนาคต
+
+4.3 การลา   (leaveService.js)
+
+  GET    /leave/balances                            [Auth]
+         200:  [ { "type": "vacation", "quota": 10, "used": 2.5, "pending": 0, "remaining": 7.5 },
+                 { "type": "personal", ... }, { "type": "sick", ... } ]
+         * นับเฉพาะปีปัจจุบัน; used = อนุมัติแล้ว, pending = รออนุมัติ
+
+  GET    /leave/requests                            [Auth]   200: [ LeaveRequest ] (ใหม่ -> เก่า)
+
+  POST   /leave/requests                            [Auth]
+         body: { "leaveType", "startDate", "endDate", "period", "reason", "attachments": [] }
+         201:  LeaveRequest (status = pending)
+         400:  ช่วงวันที่ไม่ถูกต้อง / เป็นวันหยุดทั้งหมด / วันลาคงเหลือไม่เพียงพอ / ต้องระบุเหตุผล
+
+  POST   /leave/requests/{id}/cancel                [Auth]
+         200:  LeaveRequest (status = cancelled)
+         409:  ยกเลิกได้เฉพาะคำขอที่รออนุมัติ
+
+4.4 ขอลงเวลาย้อนหลัง (ลืมลงเวลา)   (timeFixService.js)
+
+  GET    /time-fix/requests                         [Auth]   200: [ TimeFixRequest ]
+
+  POST   /time-fix/requests                         [Auth]
+         body: { "date", "fixType", "checkIn", "checkOut", "reason", "attachments": [] }
+         201:  TimeFixRequest (status = pending)
+         400:  วันที่ไม่ถูกต้อง / เกิน 30 วัน / ไม่ระบุเวลา / เวลาออกก่อนเวลาเข้า / ไม่มีเหตุผล
+         409:  วันนี้มีคำขอแก้ไขเวลารออนุมัติอยู่แล้ว
+         * เมื่อหัวหน้าอนุมัติ ให้สร้าง/แก้ AttendanceRecord ของวันนั้นตามเวลาในคำขอ
+
+  POST   /time-fix/requests/{id}/cancel             [Auth]   (ได้เฉพาะ pending)
+
+4.5 สรุปคำขอ (หน้าหลัก)   (requestService.js)
+
+  GET    /requests/status-summary                   [Auth]
+         200:  [ { "type": "leave", "pendingCount": 1 },
+                 { "type": "time_fix", "pendingCount": 1 },
+                 { "type": "advance", "pendingCount": 0 } ]     // advance = เบิกเงิน (ยังไม่เปิด)
+
+4.6 การแจ้งเตือน   (notificationService.js)
+
+  GET    /notifications                             [Auth]   200: [ Notification ] (ใหม่ -> เก่า)
+  POST   /notifications/{id}/read                   [Auth]
+  POST   /notifications/read-all                    [Auth]
+
+4.7 สลิปเงินเดือน   (payslipService.js)
+
+  GET    /payslips                                  [Auth]
+         200:  [ { "month": "2026-09", "netPay": 17746.88 }, ... ]   // เฉพาะที่ออกแล้ว ใหม่ -> เก่า สูงสุด 12 เดือน
+  GET    /payslips/{month}                          [Auth]
+         200:  Payslip        404: สลิปเดือนนี้จะออกวันที่ 25
+
+
+-------------------------------------------------------------------------------
+5. กฎการคำนวณ (Business rules) - ค่าปัจจุบันใน Frontend
+-------------------------------------------------------------------------------
+(ค่าเหล่านี้อยู่ใน frontend/src/utils/constants.js ควรย้ายไปเก็บที่ Backend / ตั้งค่าตามกะ)
+
+  เวลาเริ่มงาน              09:00       (WORK_START_TIME)
+  เวลาเลิกงาน               18:00       (WORK_END_TIME)
+  สาย                      เข้างานหลัง 09:00 (อนุโลม 0 นาที: LATE_GRACE_MINUTES)
+  lateMinutes              นาทีที่เกิน 09:00
+  OT                       ออกงานหลัง 18:00 ตั้งแต่ 30 นาทีขึ้นไป (OT_MIN_MINUTES)
+                           otMinutes = นาทีหลัง 18:00 (ถ้าไม่ถึง 30 นาที = 0)
+  workMinutes              checkOut - checkIn
+  นับวันลา                  นับเฉพาะ จ.-ศ. (ควรตัดวันหยุดบริษัทด้วย); ครึ่งวัน = 0.5
+  โควตาวันลาต่อปี (ตัวอย่าง)  พักร้อน 10, กิจ 10, ป่วย 30
+  ยื่นลาได้เมื่อ              (คงเหลือ - รออนุมัติ) >= จำนวนวันที่ขอ
+  ขอลงเวลาย้อนหลัง           ไม่เกิน 30 วัน, 1 วันมีคำขอ pending ได้ 1 รายการ
+  ไฟล์แนบ                   สูงสุด 3 ไฟล์, ไฟล์ละ 5 MB, รูปภาพหรือ PDF
+  Geofence                 รัศมี 200 เมตรจากพิกัดสำนักงาน (ตอนนี้ปิดไว้: VITE_ENFORCE_GEOFENCE)
+                           ** ต้องตรวจซ้ำที่ Backend อย่าเชื่อค่าจาก Frontend อย่างเดียว **
+  สลิปออก                   วันที่ 25 ของทุกเดือน (PAYDAY)
+
+ตัวอย่างสูตรในสลิปจำลอง (ของจริงควรมาจากระบบเงินเดือน):
+  ค่า OT      = ชั่วโมง OT × (เงินเดือน/30/8) × 1.5
+  หักมาสาย    = นาทีสาย × (เงินเดือน/30/8/60)
+  หักขาดงาน   = วันขาด × (เงินเดือน/30)
+  ประกันสังคม = 5% ของฐานไม่เกิน 15,000 (สูงสุด 750)
+  เบี้ยขยัน    = จ่ายเมื่อไม่สายและไม่ขาดทั้งเดือน
+
+
+-------------------------------------------------------------------------------
+6. API ฝั่งหัวหน้า / อนุมัติ (ยังไม่มีหน้าจอ - ร่าง)
+-------------------------------------------------------------------------------
+  GET    /approvals?status=pending                  [Auth, หัวหน้า]
+         รวมคำขอที่รอหัวหน้าคนนี้อนุมัติ (ลา + ลงเวลาย้อนหลัง) ของลูกทีม
+  POST   /approvals/{id}/approve                    [Auth, หัวหน้า]
+  POST   /approvals/{id}/reject                     [Auth, หัวหน้า]   body: { "note": "เหตุผล" }
+         -> เปลี่ยนสถานะ, สร้าง Notification ให้พนักงาน, ยิง Webhook (ข้อ 8)
+  GET    /team/today                                [Auth, หัวหน้า]   ใครเข้างานแล้ว / สาย / ลา / ยังไม่เข้า
+  GET    /team/attendance?month=YYYY-MM             [Auth, หัวหน้า]   ประวัติของลูกทีม
+
+  สิทธิ์: พนักงานเรียกเส้นเหล่านี้ต้องได้ 403
+
+
+-------------------------------------------------------------------------------
+7. API เชื่อมต่อระบบอื่น (Integrations) - ร่าง
+-------------------------------------------------------------------------------
+Base: /integrations/v1   (แยกจาก API ของแอป)
+ยืนยันตัวตน: OAuth2 client credentials หรือ API key แยกต่อระบบ พร้อม scope
+    เช่น ระบบ HR = employees:write, schedules:write
+         ระบบเงินเดือน = attendance:read, payslips:write
+         เครื่องสแกน = clock-events:write
+รหัสอ้างอิงพนักงานกับทุกระบบ: employeeCode (ไม่ใช้ id ภายใน)
+
+7.1 ระบบอื่นส่งข้อมูลเข้ามา (Inbound)
+
+  PUT    /employees/{employeeCode}           สร้างหรืออัปเดตพนักงาน (upsert)
+         { "name", "email", "phone", "position", "departmentCode", "managerCode", "startDate" }
+  POST   /employees:bulk                     ส่งหลายคนพร้อมกัน (sync ครั้งแรก)
+  POST   /employees/{employeeCode}/terminate พ้นสภาพ -> ปิดการเข้าสู่ระบบ
+  PUT    /departments/{code}                 แผนก (ผูกหัวหน้าผู้อนุมัติ)
+  PUT    /positions/{code}                   ตำแหน่ง
+  PUT    /shifts/{shiftCode}                 นิยามกะ เช่น { "name": "กะเช้า", "start": "09:00", "end": "18:00", "graceMinutes": 0 }
+  PUT    /schedules                          ตารางกะรายคน [ { "employeeCode", "date", "shiftCode" } ]
+  PUT    /holidays/{year}                    วันหยุดบริษัท [ { "date", "name" } ]
+  PUT    /locations/{code}                   พื้นที่ลงเวลา { "name", "lat", "lng", "radiusMeters" }
+  PUT    /leave-balances/{employeeCode}/{year}   โควตาวันลา { "vacation": 10, "personal": 10, "sick": 30 }
+  PUT    /payslips/{employeeCode}/{month}    สลิปจริงจากระบบเงินเดือน (รูปแบบ Payslip + "pdfUrl")
+  POST   /clock-events                       เวลาจากเครื่องสแกนนิ้ว/ใบหน้า (ตัวอย่างด้านล่าง)
+  POST   /announcements                      ประกาศ { "title", "body", "target": "all" | { "departments": [...] } }
+
+  ตัวอย่าง: เครื่องสแกนส่งเวลาเข้ามา
+  POST /integrations/v1/clock-events
+  Idempotency-Key: 7f3a-...
+  {
+    "deviceId": "HQ-FRONT-01",
+    "events": [
+      { "eventId": "e-10231", "employeeCode": "EMP-2569001",
+        "timestamp": "2026-09-25T08:52:10+07:00",
+        "type": "auto",          // auto | check_in | check_out
+        "method": "face" }       // fingerprint | face | card
+    ]
+  }
+  -> 200 { "accepted": 1, "duplicates": 0, "rejected": [] }
+  * eventId ซ้ำต้องไม่บันทึกซ้ำ
+
+7.2 ระบบอื่นดึงข้อมูลออก (Outbound)
+
+  GET    /attendance/summary?from=YYYY-MM-DD&to=YYYY-MM-DD      สรุปต่องวด (ระบบเงินเดือนใช้)
+  GET    /attendance/records?from&to&updatedSince               รายการลงเวลาดิบ
+  GET    /leave-requests?status=approved&updatedSince           ใบลาที่อนุมัติ
+  GET    /time-fix-requests?status=approved&updatedSince        คำขอลงเวลาที่อนุมัติ
+
+  ตัวอย่าง response ของ summary
+  {
+    "period": { "from": "2026-09-01", "to": "2026-09-30" },
+    "items": [
+      { "employeeCode": "EMP-2569001", "workDays": 15, "absentDays": 1,
+        "leaveDays": { "vacation": 0.5, "personal": 0, "sick": 1 },
+        "lateCount": 1, "lateMinutes": 4, "otMinutes": 225 }
+    ],
+    "nextCursor": null
+  }
+  * updatedSince = ดึงเฉพาะที่เปลี่ยนหลังเวลานั้น (ไม่ต้องดึงทั้งหมดทุกครั้ง)
+  * แบ่งหน้าแบบ cursor: ?cursor=...&limit=100
+
+
+-------------------------------------------------------------------------------
+8. Webhooks - ร่าง
+-------------------------------------------------------------------------------
+  ระบบปลายทางลงทะเบียน:  POST /integrations/v1/webhooks  { "url": "...", "events": ["leave.approved", ...] }
+
+  Events
+    attendance.checked_in / attendance.checked_out   พนักงานลงเวลา
+    attendance.missing                               สิ้นวันยังไม่ลงเวลา (ใช้ส่งเตือนทาง LINE ได้)
+    leave.submitted / leave.approved / leave.rejected
+    time_fix.submitted / time_fix.approved / time_fix.rejected
+    employee.password_reset                          (ไว้ตรวจสอบย้อนหลัง)
+
+  รูปแบบที่ส่งไป
+    POST <url ปลายทาง>
+    X-Signature: sha256=<HMAC-SHA256 ของ body ด้วย secret ของระบบนั้น>
+    { "id": "evt_901", "type": "leave.approved", "occurredAt": "2026-09-25T10:00:00+07:00",
+      "data": { "requestId": 1234, "employeeCode": "EMP-2569001", "days": 1 } }
+
+  ถ้าปลายทางไม่ตอบ 2xx -> ส่งซ้ำ 5 ครั้ง เว้นระยะนานขึ้นเรื่อย ๆ (เช่น 1, 5, 15, 60, 180 นาที)
+
+
+-------------------------------------------------------------------------------
+9. ภาคผนวก: HTTP Method คืออะไร
+-------------------------------------------------------------------------------
+  Method บอก "ทำอะไร" / path บอก "กับข้อมูลอะไร"
+
+  GET     อ่านข้อมูล ไม่เปลี่ยนอะไร ส่งเงื่อนไขทาง query (?month=2026-09)
+          ส่งซ้ำได้ผลเหมือนเดิม
+  POST    สร้างของใหม่ (ยื่นใบลา) หรือสั่ง "การกระทำ" (check-in, cancel, login)
+          ส่งซ้ำอาจได้ของซ้ำ -> ใช้ Idempotency-Key กัน
+  PUT     ส่งข้อมูล "ทั้งก้อน" ไปแทนของเดิม ถ้าไม่มีก็สร้าง (เหมาะกับ sync จากระบบอื่น)
+          ฟิลด์ที่ไม่ส่งอาจถูกล้าง; ส่งซ้ำได้ผลเหมือนเดิม
+  PATCH   แก้เฉพาะบางฟิลด์ที่ส่งไป
+  DELETE  ลบ (ข้อมูลสำคัญอย่างใบลา/เวลาทำงาน ไม่ควรลบจริง ใช้เปลี่ยนสถานะแทน)
+
+  ส่วนประกอบของ request
+    Path parameter   /payslips/{month}  -> /payslips/2026-09      ระบุ "ตัวไหน"
+    Query string     ?from=2026-09-01&to=2026-09-30               กรอง / แบ่งหน้า
+    Body (JSON)      { "reason": "มีไข้" }                          ข้อมูลที่ส่ง (POST/PUT/PATCH)
+    Header           Authorization, Idempotency-Key, X-Signature   ข้อมูลประกอบ
+
+
+-------------------------------------------------------------------------------
+10. หมายเหตุ / สิ่งที่ยังต้องตัดสินใจ
+-------------------------------------------------------------------------------
+  1) ไฟล์แนบและรูปโปรไฟล์: ตอนนี้ Frontend ส่งเป็น base64 (dataUrl) อยู่ใน JSON
+     แนะนำให้ Backend ทำเส้นอัปโหลดแยก เช่น
+         POST /uploads   (multipart/form-data)  ->  { "id", "url", "name", "type", "size" }
+     แล้วในคำขอส่งแค่ id/url ของไฟล์  (Frontend จะปรับให้ตามที่ตกลง)
+  2) PDF สลิปเงินเดือน: ตอนนี้ Frontend สร้างหน้าพิมพ์เอง ซึ่งอาจใช้ไม่ได้ในเบราว์เซอร์ของ LINE
+     แนะนำให้ Backend/ระบบเงินเดือนสร้าง PDF แล้วส่ง "pdfUrl" มาใน Payslip
+  3) การแจ้งเตือนแบบเด้ง (push): ตั้งเวลาเตือนเข้า-ออกงานได้ในแอปแล้ว (บันทึกในเครื่อง)
+     แต่การส่งจริงต้องทำที่ Backend -> แนะนำส่งผ่าน LINE Messaging API
+     (ถ้าต้องการ ควรมี GET/PUT /me/settings เก็บค่าตั้งค่าไว้ที่ server)
+  4) LINE LIFF (เฟสถัดไป): จะต้องมี
+         POST /auth/line   { "idToken" }  -> { token, user } หรือ 404 ถ้ายังไม่ผูกบัญชี
+         POST /auth/line/link { "idToken", "username", "password" }  ผูกบัญชีครั้งแรก
+  5) เบิกเงิน (advance): ยังไม่เปิดให้บริการ Frontend ซ่อนไว้ (FEATURES.ADVANCE_REQUEST)
+  6) ความปลอดภัย: rate limit ที่ /auth/login, /auth/login/pin, /auth/password/forgot
+     เก็บรหัสผ่านและ PIN แบบ hash (เช่น bcrypt/argon2), ใช้ HTTPS เท่านั้น
+
+ติดต่อฝั่ง Frontend: phumthanakorn (GitHub)
+===============================================================================
