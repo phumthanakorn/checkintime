@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-5">
-    <StatePreviewSwitcher v-if="SHOW_STATE_PREVIEW" v-model="previewState" />
+    <StatePreviewSwitcher v-if="SHOW_STATE_PREVIEW" v-model="previewState" @celebrate="previewCelebration" />
 
     <CheckInCard :state="displayState" :now="now" :loading="attendance.submitting" @action="handleAction" />
 
@@ -18,15 +18,18 @@
     :loading="attendance.submitting"
     @confirm="doCheckOut"
   />
+
+  <ClockSuccessOverlay v-model="celebration.open" v-bind="celebration.props" />
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import CheckInCard from '../components/CheckInCard.vue'
 import AttendanceStats from '../components/AttendanceStats.vue'
 import RequestStatusList from '../components/RequestStatusList.vue'
 import StatePreviewSwitcher from '../components/StatePreviewSwitcher.vue'
+import ClockSuccessOverlay from '../components/ClockSuccessOverlay.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useAttendanceStore } from '@/store'
 import { useNow } from '@/composables/useNow'
@@ -55,6 +58,30 @@ const now = useNow()
 const confirmCheckOut = ref(false)
 const previewState = ref(null)
 
+// หน้าจอฉลองหลังลงเวลาสำเร็จ
+const celebration = reactive({ open: false, props: {} })
+
+function celebrate(variant, props = {}) {
+  celebration.props = { variant, time: new Date(), ...props }
+  celebration.open = true
+}
+
+/** เลือกหน้าจอฉลองตามรายการลงเวลาที่เพิ่งบันทึก */
+function celebrateRecord(record) {
+  if (record.checkOut) {
+    celebrate('checkout', { time: record.checkOut, workMinutes: record.workMinutes })
+  } else if (record.lateMinutes > 0) {
+    celebrate('checkin-late', { time: record.checkIn, lateMinutes: record.lateMinutes })
+  } else {
+    celebrate('checkin-ontime', { time: record.checkIn })
+  }
+}
+
+// ตัวอย่างจากแถบ UI preview
+function previewCelebration(variant) {
+  celebrate(variant, { lateMinutes: 12, workMinutes: 545 })
+}
+
 const clockState = computed(() => {
   if (attendance.hasCheckedOut) return CLOCK_STATE.DONE
   if (!geofence.inside.value) return CLOCK_STATE.OUT_OF_AREA
@@ -81,7 +108,7 @@ async function handleAction(state) {
   if (previewState.value) {
     if (state === CLOCK_STATE.READY) {
       previewState.value = CLOCK_STATE.WORKING
-      notify.success(`(ตัวอย่าง) เข้างานเรียบร้อย เวลา ${formatClock(now.value)} น.`)
+      celebrate('checkin-ontime')
     } else if (state === CLOCK_STATE.WORKING) {
       confirmCheckOut.value = true
     }
@@ -101,8 +128,7 @@ async function handleAction(state) {
 
 async function doCheckIn() {
   try {
-    const record = await attendance.checkIn(geofence.position.value)
-    notify.success(`เข้างานเรียบร้อย เวลา ${formatClock(record.checkIn)} น.`)
+    celebrateRecord(await attendance.checkIn(geofence.position.value))
   } catch (error) {
     notify.error(error.message)
   }
@@ -112,14 +138,14 @@ async function doCheckOut() {
   if (previewState.value) {
     previewState.value = CLOCK_STATE.DONE
     confirmCheckOut.value = false
-    notify.success(`(ตัวอย่าง) ออกงานเรียบร้อย เวลา ${formatClock(now.value)} น.`)
+    celebrate('checkout', { workMinutes: 545 })
     return
   }
 
   try {
     const record = await attendance.checkOut(geofence.position.value)
     confirmCheckOut.value = false
-    notify.success(`ออกงานเรียบร้อย เวลา ${formatClock(record.checkOut)} น.`)
+    celebrateRecord(record)
   } catch (error) {
     notify.error(error.message)
   }

@@ -31,7 +31,7 @@
           />
           <span class="h-6 w-11 rounded-full bg-slate-200 transition peer-checked:bg-status-checkin" />
           <span
-            class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition peer-checked:translate-x-5"
+            class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-card shadow transition peer-checked:translate-x-5"
           />
         </span>
         <v-icon v-else icon="mdi-chevron-right" size="20" class="text-slate-300" />

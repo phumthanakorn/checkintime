@@ -10,6 +10,9 @@
 /*
  * Design tokens — ตาม PromptChex Design Master v1.0.0
  * ใช้เป็น class ได้ เช่น bg-status-checkin, text-ink-muted, font-display
+ *
+ * ⚠️ ห้ามใช้ bg-white / bg-black ของ Tailwind: Vuetify มี class ชื่อเดียวกันที่บังคับ
+ *    color: #000 !important ทำให้ตัวหนังสือเป็นสีดำ ให้ใช้ bg-card แทน
  */
 @theme {
   /* Typography: Prompt (ภาษาไทย/UI) + Plus Jakarta Sans (ตัวเลข/เวลา/สถิติ) */

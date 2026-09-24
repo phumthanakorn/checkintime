@@ -14,33 +14,75 @@
           {{ formatClock(now) }}
         </p>
         <p class="text-[13px] text-white/80">{{ formatThaiDate(now) }}</p>
+        <p
+          v-if="config.actionable && !loading"
+          class="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-medium"
+        >
+          <v-icon icon="mdi-gesture-tap-hold" size="14" />
+          แตะค้างไว้เพื่อลงเวลา
+        </p>
       </div>
 
-      <button
-        type="button"
-        class="flex h-[104px] w-[104px] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl bg-card px-2 shadow-md transition active:scale-95 disabled:active:scale-100"
-        :disabled="!config.actionable || loading"
-        @click="emit('action', state)"
-      >
-        <v-progress-circular v-if="loading" indeterminate :class="config.text" size="40" width="3" />
-        <span
-          v-else-if="config.iconBg"
-          class="flex h-12 w-12 items-center justify-center rounded-full text-white"
-          :class="config.iconBg"
+      <div class="relative shrink-0">
+        <!-- วงแหวนความคืบหน้าขณะกดค้าง -->
+        <svg
+          v-if="config.actionable && !loading"
+          class="pointer-events-none absolute -inset-1.5 h-[116px] w-[116px]"
+          viewBox="0 0 116 116"
+          aria-hidden="true"
         >
-          <v-icon :icon="config.icon" size="26" />
-        </span>
-        <v-icon v-else :icon="config.icon" size="46" :class="config.text" />
-        <span class="whitespace-pre-line text-center text-xs font-semibold leading-tight" :class="config.text">
-          {{ config.label }}
-        </span>
-      </button>
+          <rect x="2" y="2" width="112" height="112" rx="21" fill="none" stroke="rgb(255 255 255 / 0.3)" stroke-width="3" />
+          <rect
+            x="2"
+            y="2"
+            width="112"
+            height="112"
+            rx="21"
+            fill="none"
+            stroke="white"
+            stroke-width="4"
+            stroke-linecap="round"
+            pathLength="100"
+            stroke-dasharray="100"
+            :stroke-dashoffset="100 - progress * 100"
+            :class="!holding && 'transition-[stroke-dashoffset] duration-300 ease-out'"
+          />
+        </svg>
+
+        <button
+          type="button"
+          class="hold-button flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-2xl bg-card px-2 shadow-md transition-transform duration-150"
+          :class="holding && 'scale-95'"
+          :disabled="!config.actionable || loading"
+          :aria-label="`กดค้างเพื่อ${config.label}`"
+          @pointerdown="onPointerDown"
+          @pointerup="cancel"
+          @pointercancel="cancel"
+          @keydown.enter.space.prevent="onKeyDown"
+          @keyup.enter.space.prevent="cancel"
+          @contextmenu.prevent
+        >
+          <v-progress-circular v-if="loading" indeterminate :class="config.text" size="40" width="3" />
+          <span
+            v-else-if="config.iconBg"
+            class="flex h-12 w-12 items-center justify-center rounded-full text-white transition-transform duration-150"
+            :class="[config.iconBg, holding && 'scale-110']"
+          >
+            <v-icon :icon="config.icon" size="26" />
+          </span>
+          <v-icon v-else :icon="config.icon" size="46" :class="config.text" />
+          <span class="whitespace-pre-line text-center text-xs font-semibold leading-tight" :class="config.text">
+            {{ loading ? 'กำลังบันทึก...' : holding ? 'ค้างไว้...' : config.label }}
+          </span>
+        </button>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
+import { useHoldPress } from '@/composables/useHoldPress'
 import { CLOCK_STATE } from '@/utils/constants'
 import { formatClock, formatThaiDate } from '@/utils/formatters'
 
@@ -89,4 +131,36 @@ const STATE_CONFIG = {
 }
 
 const config = computed(() => STATE_CONFIG[props.state])
+
+// กดค้างครบ 1 วินาทีจึงส่ง action (กันกดโดนโดยไม่ตั้งใจ)
+const { progress, holding, begin, cancel, reset } = useHoldPress(() => {
+  emit('action', props.state)
+  // คืนวงแหวนหลังส่ง action (กรณีไม่ได้เปลี่ยนสถานะ เช่น อยู่นอกพื้นที่)
+  setTimeout(reset, 600)
+})
+
+watch(
+  () => [props.state, props.loading],
+  () => reset(),
+)
+
+function onPointerDown(event) {
+  if (event.button !== 0) return
+  // จับ pointer ไว้ นิ้วเลื่อนเล็กน้อยก็ยังนับว่ากดค้างอยู่
+  event.currentTarget.setPointerCapture?.(event.pointerId)
+  begin()
+}
+
+function onKeyDown(event) {
+  if (!event.repeat) begin()
+}
 </script>
+
+<style scoped>
+.hold-button {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+</style>

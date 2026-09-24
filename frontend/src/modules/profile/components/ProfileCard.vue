@@ -14,7 +14,7 @@
         />
         <span
           v-else
-          class="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-white text-2xl font-bold text-status-checkin ring-4 ring-white/40"
+          class="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-card text-2xl font-bold text-status-checkin ring-4 ring-white/40"
         >
           {{ getInitials(user?.name) }}
         </span>
