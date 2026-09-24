@@ -6,7 +6,7 @@
           type="button"
           class="flex h-10 w-10 items-center justify-center rounded-full bg-card text-ink shadow-sm"
           aria-label="ตั้งค่า"
-          @click="comingSoon"
+          @click="router.push({ name: 'settings' })"
         >
           <AppIcon name="gear" :size="22" />
         </button>
@@ -52,7 +52,8 @@ import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useAuthStore } from '@/store'
 import { useAuth } from '@/composables/useAuth'
 import { useNotification } from '@/composables/useNotification'
-import { APP_NAME, APP_VERSION, FEATURES, HR_CONTACT_PHONE, STORAGE_KEYS } from '@/utils/constants'
+import { useSettings } from '@/composables/useSettings'
+import { APP_NAME, APP_VERSION, FEATURES, HR_CONTACT_PHONE } from '@/utils/constants'
 
 const auth = useAuthStore()
 const { user, logout } = useAuth()
@@ -61,15 +62,8 @@ const router = useRouter()
 
 const confirmLogout = ref(false)
 const loggingOut = ref(false)
-const notificationsOn = ref(readNotificationSetting())
-
-function readNotificationSetting() {
-  try {
-    return localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS) !== 'off'
-  } catch {
-    return true
-  }
-}
+// สวิตช์การแจ้งเตือนใช้ค่าเดียวกับหน้าตั้งค่า
+const settings = useSettings()
 
 const workMenu = [
   {
@@ -111,6 +105,7 @@ const accountMenu = computed(() => [
   {
     key: 'personal',
     label: 'ข้อมูลส่วนตัว',
+    description: 'เบอร์โทร ที่อยู่ ผู้ติดต่อฉุกเฉิน',
     icon: 'user',
     bg: 'bg-status-checkin/10',
     color: 'text-status-checkin',
@@ -125,7 +120,7 @@ const accountMenu = computed(() => [
   {
     key: 'biometric',
     label: 'PIN / Biometric',
-    description: 'เข้าสู่ระบบด้วยลายนิ้วมือหรือ PIN',
+    description: user.value?.hasPin ? 'เปิดใช้ PIN แล้ว' : 'ตั้ง PIN เพื่อเข้าสู่ระบบได้เร็วขึ้น',
     icon: 'fingerprint',
     bg: 'bg-status-checkin/10',
     color: 'text-status-checkin',
@@ -133,11 +128,11 @@ const accountMenu = computed(() => [
   {
     key: 'notifications',
     label: 'การแจ้งเตือน',
-    description: 'เตือนเวลาเข้า-ออกงาน',
+    description: 'ตั้งเวลาเตือนได้ในหน้าตั้งค่า',
     icon: 'bell',
     bg: 'bg-rose-50',
     color: 'text-rose-500',
-    switch: notificationsOn.value,
+    switch: settings.notifications,
   },
 ])
 
@@ -167,27 +162,26 @@ onMounted(async () => {
   }
 })
 
-function comingSoon() {
-  notify.info('เมนูนี้จะเปิดให้ใช้งานเร็ว ๆ นี้')
+// key ของเมนู -> ชื่อ route
+const ROUTES = {
+  payslip: 'payslip',
+  history: 'history',
+  'time-fix': 'time-fix',
+  personal: 'profile-personal',
+  password: 'profile-password',
+  biometric: 'profile-pin',
+  privacy: 'privacy',
 }
 
 function handleSelect(key) {
-  if (key === 'payslip') router.push({ name: 'payslip' })
-  else if (key === 'history') router.push({ name: 'history' })
-  else if (key === 'time-fix') router.push({ name: 'time-fix' })
+  if (ROUTES[key]) router.push({ name: ROUTES[key] })
   else if (key === 'contact-hr') window.location.href = `tel:${HR_CONTACT_PHONE.replace(/[^\d+]/g, '')}`
   else if (key === 'advance' && !FEATURES.ADVANCE_REQUEST) notify.info('บริการเบิกเงินยังไม่เปิดให้ใช้งาน')
-  else comingSoon()
 }
 
 function handleToggle(key, value) {
   if (key !== 'notifications') return
-  notificationsOn.value = value
-  try {
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, value ? 'on' : 'off')
-  } catch {
-    // ไม่บันทึกได้ก็ไม่เป็นไร
-  }
+  settings.notifications = value
   notify.success(value ? 'เปิดการแจ้งเตือนแล้ว' : 'ปิดการแจ้งเตือนแล้ว')
 }
 

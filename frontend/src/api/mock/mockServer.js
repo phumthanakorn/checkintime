@@ -9,6 +9,7 @@ import {
   LEAVE_TYPES,
   NOTIFICATION_TYPES,
   OT_MIN_MINUTES,
+  PAYDAY,
   REQUEST_TYPES,
   STORAGE_KEYS,
   TIME_FIX_MAX_DAYS_BACK,
@@ -17,7 +18,7 @@ import {
   WORK_START_TIME,
 } from '@/utils/constants'
 import { formatDayMonth, toDateKey, toMonthKey } from '@/utils/formatters'
-import { countWeekdays, isWeekend, toDate } from '@/utils/dates'
+import { countWeekdays, isWeekend, shiftMonth, toDate } from '@/utils/dates'
 
 // เพิ่มเลขนี้เมื่อเปลี่ยนรูปแบบข้อมูล seed เพื่อให้สร้างข้อมูลใหม่อัตโนมัติ
 const DB_VERSION = 5
@@ -34,6 +35,8 @@ const SEED_USERS = [
     phone: '081-234-5678',
     startDate: '2024-03-01',
     avatarUrl: null,
+    address: '99/12 ถ.พหลโยธิน แขวงจตุจักร เขตจตุจักร กรุงเทพฯ 10900',
+    emergencyContact: { name: 'นาง สมศรี ใจดี', relation: 'มารดา', phone: '089-765-4321' },
   },
 ]
 
@@ -47,7 +50,7 @@ const LEAVE_QUOTAS = {
 const delay = (ms = 350) => new Promise((resolve) => setTimeout(resolve, ms))
 const clone = (value) => JSON.parse(JSON.stringify(value))
 // eslint-disable-next-line no-unused-vars
-const publicUser = ({ password, ...user }) => user
+const publicUser = ({ password, pin, ...user }) => ({ ...user, hasPin: !!pin })
 
 function fail(status, message) {
   const error = new Error(message)
@@ -272,8 +275,11 @@ function sanitizeAttachments(attachments = []) {
 function loadDb() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.MOCK_DB))
-    // ข้อมูลผู้ใช้ใช้จาก seed เสมอ เพื่อให้ฟิลด์ใหม่ที่เพิ่มในโค้ดมีผลทันที
-    if (saved?.version === DB_VERSION) return { ...saved, users: SEED_USERS }
+    // ผู้ใช้ = seed (ได้ฟิลด์ใหม่จากโค้ดทันที) + ค่าที่ผู้ใช้แก้ไขไว้ (userOverrides)
+    if (saved?.version === DB_VERSION) {
+      const overrides = saved.userOverrides || {}
+      return { ...saved, userOverrides: overrides, users: SEED_USERS.map((u) => ({ ...u, ...overrides[u.id] })) }
+    }
   } catch {
     // ข้อมูลเสีย สร้างใหม่ด้านล่าง
   }
@@ -346,6 +352,99 @@ export const mockAuth = {
     await delay(100)
     return { success: true }
   },
+
+  async updateProfile({ phone, email, address, emergencyContact, avatarUrl }) {
+    await delay(500)
+    const db = loadDb()
+    const user = currentUser(db)
+    if (!phone?.trim()) fail(400, 'กรุณากรอกเบอร์โทรศัพท์')
+    saveUser(db, user.id, {
+      phone: phone.trim(),
+      email: email?.trim() || user.email,
+      address: address?.trim() || '',
+      emergencyContact,
+      avatarUrl: avatarUrl ?? user.avatarUrl,
+    })
+    return publicUser(db.users.find((u) => u.id === user.id))
+  },
+
+  async changePassword({ currentPassword, newPassword }) {
+    await delay(600)
+    const db = loadDb()
+    const user = currentUser(db)
+    if (user.password !== currentPassword) fail(400, 'รหัสผ่านปัจจุบันไม่ถูกต้อง')
+    if (newPassword === currentPassword) fail(400, 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านเดิม')
+    saveUser(db, user.id, { password: newPassword })
+    return { success: true }
+  },
+
+  /** ลืมรหัสผ่าน ขั้นที่ 1: ส่ง OTP ไปยังเบอร์ที่ลงทะเบียน (โหมดทดลอง OTP = 123456) */
+  async requestPasswordReset({ username }) {
+    await delay(700)
+    const db = loadDb()
+    const user = findUserByLogin(db, username)
+    if (!user) fail(404, 'ไม่พบรหัสพนักงานหรืออีเมลนี้ในระบบ')
+    const phone = user.phone || ''
+    return { maskedPhone: `${phone.slice(0, 3)}-xxx-${phone.slice(-4)}`, refCode: 'K7QX', expiresIn: 300 }
+  },
+
+  /** ลืมรหัสผ่าน ขั้นที่ 2: ยืนยัน OTP ได้ resetToken */
+  async verifyResetOtp({ username, otp }) {
+    await delay(500)
+    const user = findUserByLogin(loadDb(), username)
+    if (!user || otp !== MOCK_OTP) fail(400, 'รหัส OTP ไม่ถูกต้อง')
+    return { resetToken: `reset-${user.id}` }
+  },
+
+  /** ลืมรหัสผ่าน ขั้นที่ 3: ตั้งรหัสผ่านใหม่ */
+  async resetPassword({ resetToken, newPassword }) {
+    await delay(600)
+    const db = loadDb()
+    const id = Number(String(resetToken).replace('reset-', ''))
+    if (!db.users.some((u) => u.id === id)) fail(400, 'ลิงก์รีเซ็ตรหัสผ่านหมดอายุ กรุณาเริ่มใหม่')
+    saveUser(db, id, { password: newPassword })
+    return { success: true }
+  },
+
+  /** ตั้ง PIN สำหรับเข้าสู่ระบบบนเครื่องนี้ (backend จริงต้องเก็บแบบ hash) */
+  async setPin({ pin }) {
+    await delay(400)
+    const db = loadDb()
+    const user = currentUser(db)
+    if (!/^\d{6}$/.test(pin)) fail(400, 'PIN ต้องเป็นตัวเลข 6 หลัก')
+    saveUser(db, user.id, { pin })
+    return { success: true }
+  },
+
+  async removePin() {
+    await delay(300)
+    const db = loadDb()
+    saveUser(db, currentUser(db).id, { pin: null })
+    return { success: true }
+  },
+
+  async loginWithPin({ employeeCode, pin }) {
+    await delay(500)
+    const user = findUserByLogin(loadDb(), employeeCode)
+    if (!user?.pin) fail(400, 'ยังไม่ได้ตั้งค่า PIN สำหรับบัญชีนี้')
+    if (user.pin !== pin) fail(401, 'PIN ไม่ถูกต้อง')
+    return { token: `mock-token-${user.id}`, user: publicUser(user) }
+  },
+}
+
+const MOCK_OTP = '123456'
+
+function findUserByLogin(db, username) {
+  const key = String(username || '').trim().toLowerCase()
+  return db.users.find((u) => u.email.toLowerCase() === key || u.employeeCode.toLowerCase() === key)
+}
+
+/** บันทึกค่าที่ผู้ใช้แก้ไข (ทับค่าจาก seed) */
+function saveUser(db, id, changes) {
+  db.userOverrides = { ...db.userOverrides, [id]: { ...db.userOverrides?.[id], ...changes } }
+  const index = db.users.findIndex((u) => u.id === id)
+  db.users[index] = { ...db.users[index], ...changes }
+  saveDb(db)
 }
 
 export const mockAttendance = {
@@ -598,5 +697,160 @@ export const mockNotification = {
     for (const n of db.notifications || []) if (n.userId === user.id) n.read = true
     saveDb(db)
     return { success: true }
+  },
+}
+
+// ---------- สลิปเงินเดือน ----------
+
+const PAYROLL = {
+  baseSalary: 18000,
+  travelAllowance: 1000,
+  diligenceBonus: 500, // เบี้ยขยัน: ไม่สาย ไม่ขาดทั้งเดือน
+  otMultiplier: 1.5,
+  socialSecurityRate: 0.05,
+  socialSecurityCap: 750,
+  withholdingTax: 320,
+  bank: { name: 'ธนาคารกสิกรไทย', account: 'xxx-x-x4821-x' },
+}
+
+const dailyRate = () => PAYROLL.baseSalary / 30
+const minuteRate = () => dailyRate() / 8 / 60
+const round2 = (n) => Math.round(n * 100) / 100
+
+/** สลิปออกแล้วหรือยัง: เดือนก่อนหน้า หรือเดือนนี้ตั้งแต่วันจ่าย */
+function isReleased(month) {
+  const current = toMonthKey()
+  return month < current || (month === current && new Date().getDate() >= PAYDAY)
+}
+
+/** สถิติการทำงานของเดือน (ใช้ข้อมูลจริง ถ้าเดือนนั้นอยู่นอกช่วงข้อมูลตัวอย่าง จะสุ่มแบบคงที่) */
+function monthAttendance(db, userId, month) {
+  const records = db.records.filter((r) => r.userId === userId)
+  const firstTracked = records.reduce((min, r) => (r.date < min ? r.date : min), toDateKey())
+  const [y, m] = month.split('-').map(Number)
+  const lastDay = toDateKey(new Date(y, m, 0))
+
+  if (lastDay < firstTracked) {
+    const rand = createRandom(y * 100 + m)
+    const weekdays = countWeekdays(`${month}-01`, lastDay)
+    const leaveDays = rand() < 0.4 ? 1 : 0
+    const lateCount = Math.floor(rand() * 3)
+    return {
+      workDays: weekdays - leaveDays,
+      leaveDays,
+      absentDays: 0,
+      lateCount,
+      lateMinutes: lateCount * (5 + Math.floor(rand() * 15)),
+      otMinutes: Math.floor(rand() * 8) * 30,
+    }
+  }
+
+  const monthRecords = records.filter((r) => r.date.startsWith(month))
+  const leaveDays = approvedLeaveDays(db, userId)
+  const approvedFixDates = new Set(
+    timeFixRequestsOf(db, userId)
+      .filter((r) => r.status === LEAVE_STATUS.APPROVED)
+      .map((r) => r.date),
+  )
+  const recordDates = new Set(monthRecords.map((r) => r.date))
+  let absentDays = 0
+  let monthLeaveDays = 0
+  for (let d = new Date(y, m - 1, 1); d.getMonth() === m - 1; d.setDate(d.getDate() + 1)) {
+    const key = toDateKey(d)
+    if (isWeekend(d) || key >= toDateKey() || key < firstTracked) continue
+    if (leaveDays.has(key)) monthLeaveDays++
+    else if (!recordDates.has(key) && !approvedFixDates.has(key)) absentDays++
+  }
+  const late = monthRecords.filter((r) => r.lateMinutes > 0)
+  return {
+    workDays: monthRecords.length,
+    leaveDays: monthLeaveDays,
+    absentDays,
+    lateCount: late.length,
+    lateMinutes: late.reduce((sum, r) => sum + r.lateMinutes, 0),
+    otMinutes: monthRecords.reduce((sum, r) => sum + (r.otMinutes || 0), 0),
+  }
+}
+
+function buildPayslip(db, user, month) {
+  const att = monthAttendance(db, user.id, month)
+  const otHours = att.otMinutes / 60
+  const otPay = round2(otHours * (dailyRate() / 8) * PAYROLL.otMultiplier)
+  const diligent = att.lateCount === 0 && att.absentDays === 0
+
+  const earnings = [
+    { label: 'เงินเดือน', amount: PAYROLL.baseSalary },
+    otPay > 0 && { label: 'ค่าล่วงเวลา (OT)', amount: otPay, note: `${round2(otHours)} ชม. × ${PAYROLL.otMultiplier} เท่า` },
+    { label: 'ค่าเดินทาง', amount: PAYROLL.travelAllowance },
+    diligent && { label: 'เบี้ยขยัน', amount: PAYROLL.diligenceBonus, note: 'ไม่สาย ไม่ขาดงานทั้งเดือน' },
+  ].filter(Boolean)
+
+  const grossForSso = Math.min(PAYROLL.baseSalary, 15000)
+  const deductions = [
+    {
+      label: 'ประกันสังคม',
+      amount: Math.min(PAYROLL.socialSecurityCap, round2(grossForSso * PAYROLL.socialSecurityRate)),
+      note: `${PAYROLL.socialSecurityRate * 100}% (สูงสุด ${PAYROLL.socialSecurityCap} บาท)`,
+    },
+    { label: 'ภาษีหัก ณ ที่จ่าย', amount: PAYROLL.withholdingTax },
+    att.lateMinutes > 0 && {
+      label: 'หักมาสาย',
+      amount: round2(att.lateMinutes * minuteRate()),
+      note: `${att.lateCount} ครั้ง รวม ${att.lateMinutes} นาที`,
+    },
+    att.absentDays > 0 && {
+      label: 'หักขาดงาน',
+      amount: round2(att.absentDays * dailyRate()),
+      note: `${att.absentDays} วัน`,
+    },
+  ].filter(Boolean)
+
+  const totalEarnings = round2(earnings.reduce((sum, e) => sum + e.amount, 0))
+  const totalDeductions = round2(deductions.reduce((sum, d) => sum + d.amount, 0))
+  const [y, m] = month.split('-').map(Number)
+
+  return {
+    month,
+    payDate: toDateKey(new Date(y, m - 1, PAYDAY)),
+    employee: {
+      name: user.name,
+      employeeCode: user.employeeCode,
+      position: user.position,
+      department: user.department,
+    },
+    bank: PAYROLL.bank,
+    earnings,
+    deductions,
+    totalEarnings,
+    totalDeductions,
+    netPay: round2(totalEarnings - totalDeductions),
+    attendance: att,
+  }
+}
+
+export const mockPayslip = {
+  /** รายการเดือนที่มีสลิป (ล่าสุดก่อน) สูงสุด 12 เดือน */
+  async getList() {
+    await delay(250)
+    const db = loadDb()
+    const user = currentUser(db)
+    const months = []
+    let month = toMonthKey()
+    while (months.length < 12) {
+      if (isReleased(month) && month >= user.startDate.slice(0, 7)) {
+        months.push({ month, netPay: buildPayslip(db, user, month).netPay })
+      }
+      month = shiftMonth(month, -1)
+      if (month < user.startDate.slice(0, 7)) break
+    }
+    return months
+  },
+
+  async getDetail(month) {
+    await delay(400)
+    const db = loadDb()
+    const user = currentUser(db)
+    if (!isReleased(month)) fail(404, `สลิปเดือนนี้จะออกวันที่ ${PAYDAY}`)
+    return buildPayslip(db, user, month)
   },
 }

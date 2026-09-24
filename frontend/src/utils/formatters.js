@@ -122,3 +122,8 @@ export function formatRelativeTime(date, now = new Date()) {
   if (dayDiff === 1) return `เมื่อวาน ${formatClock(d)}`
   return `${formatDayMonth(d, d.getFullYear() !== now.getFullYear())} ${formatClock(d)}`
 }
+
+/** 24350 -> '24,350.00' */
+export function formatMoney(amount = 0) {
+  return Number(amount).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}

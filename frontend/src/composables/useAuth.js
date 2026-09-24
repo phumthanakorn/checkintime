@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAttendanceStore, useAuthStore, useLeaveStore, useNotificationStore, useTimeFixStore } from '@/store'
+import { useAttendanceStore, useAuthStore, useLeaveStore, useNotificationStore, usePayslipStore, useTimeFixStore } from '@/store'
 
 export function useAuth() {
   const auth = useAuthStore()
@@ -8,6 +8,7 @@ export function useAuth() {
   const leave = useLeaveStore()
   const timeFix = useTimeFixStore()
   const notifications = useNotificationStore()
+  const payslip = usePayslipStore()
   const router = useRouter()
   const route = useRoute()
 
@@ -16,6 +17,15 @@ export function useAuth() {
 
   async function login(credentials) {
     await auth.login(credentials)
+    await goAfterLogin()
+  }
+
+  async function loginWithPin(credentials) {
+    await auth.loginWithPin(credentials)
+    await goAfterLogin()
+  }
+
+  async function goAfterLogin() {
     const redirect = route.query.redirect
     // อนุญาตเฉพาะ path ภายในแอป กัน open redirect
     const target = typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/'
@@ -28,8 +38,9 @@ export function useAuth() {
     leave.reset()
     timeFix.reset()
     notifications.reset()
+    payslip.reset()
     await router.replace({ name: 'login' })
   }
 
-  return { user, isAuthenticated, login, logout }
+  return { user, isAuthenticated, login, loginWithPin, logout }
 }

@@ -14,6 +14,18 @@ const routes = [
     meta: { layout: 'auth', guestOnly: true, title: 'เข้าสู่ระบบ' },
   },
   {
+    path: '/login/pin',
+    name: 'pin-login',
+    component: () => import('@/modules/auth/views/PinLoginView.vue'),
+    meta: { layout: 'auth', guestOnly: true, title: 'เข้าสู่ระบบด้วย PIN' },
+  },
+  {
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: () => import('@/modules/auth/views/ForgotPasswordView.vue'),
+    meta: { layout: 'auth', guestOnly: true, title: 'ลืมรหัสผ่าน' },
+  },
+  {
     path: '/',
     name: 'home',
     component: () => import('@/modules/home/views/HomeView.vue'),
@@ -42,6 +54,36 @@ const routes = [
     name: 'profile',
     component: () => import('@/modules/profile/views/ProfileView.vue'),
     meta: { layout: 'main', requiresAuth: true, hideHeader: true, title: 'ฉัน' },
+  },
+  {
+    path: '/me/personal',
+    name: 'profile-personal',
+    component: () => import('@/modules/profile/views/PersonalInfoView.vue'),
+    meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'profile', title: 'ข้อมูลส่วนตัว' },
+  },
+  {
+    path: '/me/password',
+    name: 'profile-password',
+    component: () => import('@/modules/profile/views/ChangePasswordView.vue'),
+    meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'profile', title: 'เปลี่ยนรหัสผ่าน' },
+  },
+  {
+    path: '/me/pin',
+    name: 'profile-pin',
+    component: () => import('@/modules/profile/views/PinSettingsView.vue'),
+    meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'profile', title: 'PIN / Biometric' },
+  },
+  {
+    path: '/me/settings',
+    name: 'settings',
+    component: () => import('@/modules/profile/views/SettingsView.vue'),
+    meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'profile', title: 'ตั้งค่า' },
+  },
+  {
+    path: '/privacy',
+    name: 'privacy',
+    component: () => import('@/modules/profile/views/PrivacyView.vue'),
+    meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'profile', title: 'นโยบายความเป็นส่วนตัว' },
   },
   {
     path: '/payslip',

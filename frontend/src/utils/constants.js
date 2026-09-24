@@ -9,6 +9,9 @@ export const STORAGE_KEYS = {
   USER: 'cit_user',
   REMEMBER_USERNAME: 'cit_remember_username',
   NOTIFICATIONS: 'cit_notifications',
+  HIDE_AMOUNTS: 'cit_hide_amounts',
+  PIN_USER: 'cit_pin_user', // บัญชีที่ตั้ง PIN ไว้บนเครื่องนี้
+  SETTINGS: 'cit_settings',
   MOCK_DB: 'cit_mock_db',
 }
 
@@ -152,3 +155,8 @@ export const NOTIFICATION_META = {
   [NOTIFICATION_TYPES.PAYSLIP]: { icon: 'file-text', bg: 'bg-metric-blue/10', color: 'text-metric-blue' },
   [NOTIFICATION_TYPES.ANNOUNCEMENT]: { icon: 'megaphone', bg: 'bg-metric-cyan/10', color: 'text-metric-cyan' },
 }
+
+// ---------- สลิปเงินเดือน ----------
+
+/** วันที่จ่ายเงินเดือน (สลิปของเดือนจะออกวันนี้) */
+export const PAYDAY = 25

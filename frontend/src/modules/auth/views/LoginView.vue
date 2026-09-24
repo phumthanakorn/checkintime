@@ -14,7 +14,7 @@
       :loading="loading"
       :initial-username="rememberedUsername"
       @submit="handleLogin"
-      @forgot="notify.info(`กรุณาติดต่อฝ่ายบุคคล (HR) ${HR_CONTACT_PHONE}`)"
+      @forgot="router.push({ name: 'forgot-password' })"
     />
 
     <div class="my-5 flex items-center gap-3 text-xs text-slate-400">
@@ -28,7 +28,7 @@
         <span class="flex h-5 w-5 items-center justify-center rounded bg-[#06C755] text-[10px] font-bold text-white">L</span>
         LINE Official
       </button>
-      <button class="alt-btn" type="button" @click="comingSoon">
+      <button class="alt-btn" type="button" @click="loginWithPin">
         <AppIcon name="fingerprint" :size="20" class="text-emerald-600" />
         PIN / Biometric
       </button>
@@ -55,6 +55,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import LoginForm from '../components/LoginForm.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useNotification } from '@/composables/useNotification'
@@ -62,6 +63,7 @@ import { APP_NAME, APP_VERSION, HR_CONTACT_PHONE, STORAGE_KEYS, USE_MOCK } from 
 
 const { login } = useAuth()
 const notify = useNotification()
+const router = useRouter()
 
 const loading = ref(false)
 const rememberedUsername = localStorage.getItem(STORAGE_KEYS.REMEMBER_USERNAME) || ''
@@ -81,6 +83,12 @@ async function handleLogin({ username, password, remember }) {
 
 function comingSoon() {
   notify.info('ช่องทางนี้จะเปิดให้ใช้งานเร็ว ๆ นี้')
+}
+
+/** เข้าด้วย PIN ได้เมื่อเคยตั้ง PIN บนเครื่องนี้ไว้ */
+function loginWithPin() {
+  if (localStorage.getItem(STORAGE_KEYS.PIN_USER)) router.push({ name: 'pin-login' })
+  else notify.info('ยังไม่ได้ตั้งค่า PIN บนเครื่องนี้ เข้าสู่ระบบด้วยรหัสผ่านแล้วตั้งค่าที่เมนู “ฉัน”')
 }
 </script>
 

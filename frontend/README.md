@@ -14,7 +14,7 @@ npm run build
 
 โหมด mock (ค่าเริ่มต้น) เก็บข้อมูลใน localStorage ใช้ทดลองได้ทันทีโดยไม่ต้องมี backend
 
-- บัญชีทดลอง: `EMP-2569001` / `123456`
+- บัญชีทดลอง: `EMP-2569001` / `123456` (OTP ลืมรหัสผ่าน: `123456`)
 - ล้างข้อมูลทดลอง: ลบ localStorage key `cit_mock_db`
 
 ## ตั้งค่า (.env)
@@ -44,19 +44,22 @@ src/
 ├── layouts/                  AuthLayout, MainLayout (header + bottom nav), BlankLayout
 ├── components/
 │   ├── common/               AppButton, ConfirmModal, AppBottomSheet, DateField,
-│   │                         MonthSwitcher, SegmentedTabs, StatusBadge
+│   │                         MonthSwitcher, SegmentedTabs, StatusBadge, AppIcon, AppDatePicker,
+│   │                         DateRangeField, AppTimePicker, TimeField, AttachmentField, AttachmentList,
+│   │                         TextField, PasswordField, PinPad, OtpInput, ToggleSwitch
 │   ├── feedback/             LoadingDots, LoadingState, ToastNotification, EmptyState
 │   └── layout/               AppHeader, AppBottomNav, PageHeader
 └── modules/
-    ├── auth/                 LoginForm | LoginView
+    ├── auth/                 LoginForm | LoginView, ForgotPasswordView, PinLoginView
     ├── home/                 CheckInCard, AttendanceStats, RequestStatusList | HomeView
     ├── history/              HistorySummary, HistoryItem, HistoryDetailSheet | HistoryView
     ├── notifications/        NotificationItem | NotificationsView
     ├── time-fix/             TimeFixForm, TimeFixItem, TimeFixDetailSheet | TimeFixView
     ├── leave/                LeaveBalanceList, LeaveRequestItem, LeaveRequestForm,
     │                         LeaveDetailSheet | LeaveView
-    ├── profile/              ProfileCard, MenuGroup | ProfileView (แท็บ "ฉัน")
-    ├── payslip/              PayslipView   (โครง รอพัฒนา, เข้าจากแท็บ "ฉัน")
+    ├── profile/              ProfileCard, MenuGroup | ProfileView (แท็บ "ฉัน"), PersonalInfoView,
+    │                         ChangePasswordView, PinSettingsView, SettingsView, PrivacyView
+    ├── payslip/              NetPayCard, PayslipSection | PayslipView (เข้าจากแท็บ "ฉัน")
     └── system/               NotFoundView
 ```
 
@@ -76,6 +79,13 @@ src/
 | POST | `/auth/login` `{ username, password }` | คืน `{ token, user }` |
 | GET | `/auth/me` | ข้อมูลผู้ใช้ |
 | POST | `/auth/logout` | ออกจากระบบ |
+| POST | `/auth/login/pin` `{ employeeCode, pin }` | เข้าสู่ระบบด้วย PIN |
+| POST | `/auth/password/forgot` `{ username }` | ส่ง OTP → `{ maskedPhone, refCode }` |
+| POST | `/auth/password/verify-otp` `{ username, otp }` | ยืนยัน OTP → `{ resetToken }` |
+| POST | `/auth/password/reset` `{ resetToken, newPassword }` | ตั้งรหัสผ่านใหม่ |
+| PUT | `/me/profile` `{ phone, email, address, emergencyContact, avatarUrl }` | แก้ไขข้อมูลส่วนตัว → user |
+| POST | `/me/password` `{ currentPassword, newPassword }` | เปลี่ยนรหัสผ่าน |
+| POST / DELETE | `/me/pin` `{ pin }` | ตั้ง / ปิด PIN (backend ต้องเก็บแบบ hash) |
 | GET | `/attendance/today` | รายการวันนี้ หรือ `null` |
 | POST | `/attendance/check-in` `{ location }` | เข้างาน |
 | POST | `/attendance/check-out` `{ location }` | ออกงาน |
@@ -88,6 +98,8 @@ src/
 | GET | `/time-fix/requests` | คำขอลงเวลาย้อนหลัง |
 | POST | `/time-fix/requests` `{ date, fixType, checkIn, checkOut, reason }` | ขอลงเวลาย้อนหลัง (`fixType`: check_in / check_out / both) |
 | POST | `/time-fix/requests/:id/cancel` | ยกเลิกคำขอที่รออนุมัติ |
+| GET | `/payslips` | เดือนที่สลิปออกแล้ว `[{ month, netPay }]` |
+| GET | `/payslips/:month` | รายละเอียดสลิป (รายได้, รายการหัก, ยอดสุทธิ, สรุปเวลาทำงาน) — 404 ถ้ายังไม่ออก |
 | GET | `/notifications` | การแจ้งเตือน `[{ id, type, title, body, createdAt, read, link }]` |
 | POST | `/notifications/:id/read` | อ่านแล้ว |
 | POST | `/notifications/read-all` | อ่านทั้งหมด |

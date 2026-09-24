@@ -6,11 +6,17 @@
       v-for="item in items"
       :key="item.name"
       :to="{ name: item.name }"
-      class="flex flex-col items-center gap-1 py-3 text-[11px] font-medium no-underline transition-colors"
-      :class="isActive(item) ? 'font-semibold text-metric-blue' : 'text-ink-muted'"
+      class="flex flex-col items-center gap-0.5 pb-2.5 pt-2 text-[11px] font-medium no-underline transition-colors"
+      :class="isActive(item) ? 'font-semibold text-status-checkin' : 'text-ink-muted'"
+      :aria-current="isActive(item) ? 'page' : undefined"
     >
-      <!-- แท็บที่เลือก: ไอคอนแบบทึบ -->
-      <AppIcon :name="item.icon" :size="24" :weight="isActive(item) ? 'fill' : 'regular'" />
+      <!-- แท็บที่เลือก: ไอคอนทึบบนแคปซูลสีเขียวอ่อน -->
+      <span
+        class="flex h-8 w-14 items-center justify-center rounded-full transition-colors duration-200"
+        :class="isActive(item) ? 'bg-status-checkin/12' : 'bg-transparent'"
+      >
+        <AppIcon :name="item.icon" :size="22" :weight="isActive(item) ? 'fill' : 'regular'" />
+      </span>
       {{ item.label }}
     </router-link>
   </nav>

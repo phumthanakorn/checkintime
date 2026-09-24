@@ -45,6 +45,38 @@ export const useAuthStore = defineStore('auth', () => {
     return freshUser
   }
 
+  async function loginWithPin(credentials) {
+    const { token: newToken, user: newUser } = await authService.loginWithPin(credentials)
+    setSession(newToken, newUser)
+    return newUser
+  }
+
+  async function updateProfile(payload) {
+    const updated = await authService.updateProfile(payload)
+    setSession(token.value, updated)
+    rememberPinUser()
+    return updated
+  }
+
+  /** ตั้ง PIN และจำบัญชีไว้บนเครื่องนี้ (หน้า login จะมีปุ่มเข้าด้วย PIN) */
+  async function setPin(pin) {
+    await authService.setPin({ pin })
+    setSession(token.value, { ...user.value, hasPin: true })
+    rememberPinUser()
+  }
+
+  async function removePin() {
+    await authService.removePin()
+    setSession(token.value, { ...user.value, hasPin: false })
+    localStorage.removeItem(STORAGE_KEYS.PIN_USER)
+  }
+
+  function rememberPinUser() {
+    if (!user.value?.hasPin) return
+    const { employeeCode, name, avatarUrl } = user.value
+    localStorage.setItem(STORAGE_KEYS.PIN_USER, JSON.stringify({ employeeCode, name, avatarUrl }))
+  }
+
   async function logout() {
     try {
       await authService.logout()
@@ -55,5 +87,18 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { token, user, isAuthenticated, role, login, refreshUser, logout, clearSession }
+  return {
+    token,
+    user,
+    isAuthenticated,
+    role,
+    login,
+    loginWithPin,
+    refreshUser,
+    updateProfile,
+    setPin,
+    removePin,
+    logout,
+    clearSession,
+  }
 })
