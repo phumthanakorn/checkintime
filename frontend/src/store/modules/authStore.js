@@ -58,6 +58,12 @@ export const useAuthStore = defineStore('auth', () => {
     return updated
   }
 
+  async function acceptConsent(payload) {
+    const updated = await authService.acceptConsent(payload)
+    setSession(token.value, updated)
+    return updated
+  }
+
   /** ตั้ง PIN และจำบัญชีไว้บนเครื่องนี้ (หน้า login จะมีปุ่มเข้าด้วย PIN) */
   async function setPin(pin) {
     await authService.setPin({ pin })
@@ -96,6 +102,7 @@ export const useAuthStore = defineStore('auth', () => {
     loginWithPin,
     refreshUser,
     updateProfile,
+    acceptConsent,
     setPin,
     removePin,
     logout,

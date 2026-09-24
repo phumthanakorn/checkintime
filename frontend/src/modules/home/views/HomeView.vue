@@ -2,6 +2,8 @@
   <div class="space-y-5">
     <StatePreviewSwitcher v-if="SHOW_STATE_PREVIEW" v-model="previewState" @celebrate="previewCelebration" />
 
+    <LocationPermissionBanner />
+
     <CheckInCard :state="displayState" :now="now" :loading="attendance.submitting" @action="handleAction" />
 
     <AttendanceStats :summary="displaySummary" />
@@ -30,6 +32,7 @@ import AttendanceStats from '../components/AttendanceStats.vue'
 import RequestStatusList from '../components/RequestStatusList.vue'
 import StatePreviewSwitcher from '../components/StatePreviewSwitcher.vue'
 import ClockSuccessOverlay from '../components/ClockSuccessOverlay.vue'
+import LocationPermissionBanner from '../components/LocationPermissionBanner.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useAttendanceStore } from '@/store'
 import { useNow } from '@/composables/useNow'

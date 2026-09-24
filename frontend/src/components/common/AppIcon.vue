@@ -87,9 +87,21 @@ import {
   PhPassword,
   PhTrash,
   PhUsersThree,
+  PhCheckSquare,
+  PhCrosshair,
+  PhHandshake,
+  PhNavigationArrow,
+  PhRocketLaunch,
+  PhSquare,
 } from '@phosphor-icons/vue'
 
 const ICONS = {
+  'check-square': PhCheckSquare,
+  'crosshair': PhCrosshair,
+  'handshake': PhHandshake,
+  'navigation': PhNavigationArrow,
+  'rocket': PhRocketLaunch,
+  'square': PhSquare,
   'reset': PhArrowCounterClockwise,
   'backspace': PhBackspace,
   'camera': PhCamera,

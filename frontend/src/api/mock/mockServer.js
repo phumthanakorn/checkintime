@@ -423,6 +423,19 @@ export const mockAuth = {
     return { success: true }
   },
 
+  /** บันทึกความยินยอมตาม PDPA (เก็บเวอร์ชันนโยบายและเวลาที่ยินยอม) */
+  async acceptConsent({ policyVersion, location }) {
+    await delay(400)
+    const db = loadDb()
+    const user = currentUser(db)
+    if (!policyVersion) fail(400, 'ไม่พบเวอร์ชันนโยบาย')
+    if (!location) fail(400, 'ต้องยินยอมให้ใช้ตำแหน่งขณะลงเวลา จึงจะใช้งานแอปได้')
+    saveUser(db, user.id, {
+      consent: { policyVersion, location: true, acceptedAt: new Date().toISOString() },
+    })
+    return publicUser(db.users.find((u) => u.id === user.id))
+  },
+
   async loginWithPin({ employeeCode, pin }) {
     await delay(500)
     const user = findUserByLogin(loadDb(), employeeCode)

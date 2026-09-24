@@ -53,6 +53,7 @@ src/
     ├── auth/                 LoginForm | LoginView, ForgotPasswordView, PinLoginView
     ├── home/                 CheckInCard, AttendanceStats, RequestStatusList | HomeView
     ├── history/              HistorySummary, HistoryItem, HistoryDetailSheet | HistoryView
+    ├── onboarding/           ConsentStep, LocationStep | OnboardingView (ยินยอม PDPA + ขอตำแหน่ง)
     ├── notifications/        NotificationItem | NotificationsView
     ├── time-fix/             TimeFixForm, TimeFixItem, TimeFixDetailSheet | TimeFixView
     ├── leave/                LeaveBalanceList, LeaveRequestItem, LeaveRequestForm,
@@ -85,6 +86,7 @@ src/
 | POST | `/auth/password/reset` `{ resetToken, newPassword }` | ตั้งรหัสผ่านใหม่ |
 | PUT | `/me/profile` `{ phone, email, address, emergencyContact, avatarUrl }` | แก้ไขข้อมูลส่วนตัว → user |
 | POST | `/me/password` `{ currentPassword, newPassword }` | เปลี่ยนรหัสผ่าน |
+| POST | `/me/consents` `{ policyVersion, location }` | ยินยอม PDPA (บังคับก่อนใช้งาน) → user |
 | POST / DELETE | `/me/pin` `{ pin }` | ตั้ง / ปิด PIN (backend ต้องเก็บแบบ hash) |
 | GET | `/attendance/today` | รายการวันนี้ หรือ `null` |
 | POST | `/attendance/check-in` `{ location }` | เข้างาน |

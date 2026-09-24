@@ -160,3 +160,9 @@ export const NOTIFICATION_META = {
 
 /** วันที่จ่ายเงินเดือน (สลิปของเดือนจะออกวันนี้) */
 export const PAYDAY = 25
+
+// ---------- PDPA ----------
+
+/** เวอร์ชันนโยบายความเป็นส่วนตัว: เปลี่ยนค่านี้เมื่อแก้นโยบาย ผู้ใช้ทุกคนจะถูกขอความยินยอมใหม่ */
+export const PDPA_POLICY_VERSION = '2026-09-01'
+export const PDPA_UPDATED_AT = '1 ก.ย. 2569'

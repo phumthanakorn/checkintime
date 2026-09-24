@@ -3,6 +3,7 @@
  *  - layout: 'main' (มีแถบเมนูด้านล่าง) | 'auth' | 'blank'
  *  - requiresAuth: ต้องเข้าสู่ระบบก่อน
  *  - guestOnly: เฉพาะผู้ที่ยังไม่เข้าสู่ระบบ
+ *  - skipConsent: เข้าได้แม้ยังไม่ยินยอม PDPA (หน้าอื่นที่ requiresAuth จะถูกพาไป onboarding ก่อน)
  *  - hideHeader: ซ่อนส่วนหัว (คำทักทาย) ของ MainLayout
  *  - tab: ชื่อ route ของแท็บด้านล่างที่ต้องไฮไลต์ (ใช้กับหน้าย่อย)
  */
@@ -24,6 +25,12 @@ const routes = [
     name: 'forgot-password',
     component: () => import('@/modules/auth/views/ForgotPasswordView.vue'),
     meta: { layout: 'auth', guestOnly: true, title: 'ลืมรหัสผ่าน' },
+  },
+  {
+    path: '/onboarding',
+    name: 'onboarding',
+    component: () => import('@/modules/onboarding/views/OnboardingView.vue'),
+    meta: { layout: 'auth', requiresAuth: true, skipConsent: true, title: 'เริ่มต้นใช้งาน' },
   },
   {
     path: '/',

@@ -95,7 +95,10 @@
   "avatarUrl": null,                         // URL รูป หรือ null
   "address": "99/12 ถ.พหลโยธิน ...",
   "emergencyContact": { "name": "นาง สมศรี ใจดี", "relation": "มารดา", "phone": "089-765-4321" },
-  "hasPin": false                            // ตั้ง PIN ไว้หรือยัง
+  "hasPin": false,                           // ตั้ง PIN ไว้หรือยัง
+  "consent": {                              // ความยินยอม PDPA ล่าสุด (null = ยังไม่ยินยอม)
+    "policyVersion": "2026-09-01", "location": true, "acceptedAt": "2026-09-25T09:00:00+07:00"
+  }
 }
 
 3.2 AttendanceRecord (การลงเวลา 1 วัน)
@@ -219,6 +222,13 @@
          body: { "currentPassword": "...", "newPassword": "..." }
          400:  รหัสผ่านปัจจุบันไม่ถูกต้อง / รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านเดิม
          กฎรหัสผ่านใหม่: อย่างน้อย 8 ตัว มีทั้งตัวอักษรและตัวเลข
+
+  POST   /me/consents                               [Auth]
+         body: { "policyVersion": "2026-09-01", "location": true }
+         200:  User (มี consent ล่าสุด)
+         * Frontend บังคับให้ยินยอมก่อนใช้งานทุกหน้า ถ้า user.consent.policyVersion
+           ไม่ตรงกับเวอร์ชันปัจจุบัน (PDPA_POLICY_VERSION) จะพาไปหน้า onboarding
+         * ควรเก็บประวัติการยินยอมทุกครั้ง (ใคร / เวอร์ชันไหน / เมื่อไร / จากเครื่องไหน) เพื่อใช้อ้างอิงตามกฎหมาย
 
   POST   /me/pin                                    [Auth]   body: { "pin": "6 หลัก" }
   DELETE /me/pin                                    [Auth]   ปิดการใช้ PIN

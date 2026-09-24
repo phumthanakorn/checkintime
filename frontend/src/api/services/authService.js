@@ -17,6 +17,9 @@ const httpAuth = {
   verifyResetOtp: (payload) => axiosClient.post('/auth/password/verify-otp', payload),
   resetPassword: (payload) => axiosClient.post('/auth/password/reset', payload),
 
+  /** ความยินยอมตาม PDPA { policyVersion, location: true } -> user (มี consent) */
+  acceptConsent: (payload) => axiosClient.post('/me/consents', payload),
+
   /** PIN 6 หลักสำหรับเข้าสู่ระบบบนเครื่องนี้ */
   setPin: (payload) => axiosClient.post('/me/pin', payload),
   removePin: () => axiosClient.delete('/me/pin'),
