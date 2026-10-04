@@ -1,13 +1,14 @@
 <template>
+  <!-- แถบเมนูลอย: แคปซูลมุมมน เว้นระยะจากขอบจอ มีเงา ไม่ติดขอบล่าง -->
   <nav
-    class="fixed bottom-0 left-1/2 z-10 grid w-full max-w-md -translate-x-1/2 grid-cols-4 border-t border-slate-100 bg-card pb-[env(safe-area-inset-bottom)]"
+    class="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 z-10 grid w-[calc(100%-2rem)] max-w-[24rem] -translate-x-1/2 grid-cols-4 rounded-full border border-white/70 bg-card/90 px-2 shadow-[0_8px_30px_rgb(15_23_42/0.12)] backdrop-blur-md"
   >
     <!-- ไอคอนอย่างเดียว (ไม่มีข้อความ) แท็บที่เลือก = ไอคอนทึบสีหลัก (เขียว) -->
     <router-link
       v-for="item in items"
       :key="item.name"
       :to="{ name: item.name }"
-      class="flex h-14 items-center justify-center no-underline transition-colors duration-200"
+      class="flex h-16 items-center justify-center no-underline transition-colors duration-200"
       :class="isActive(item) ? 'text-status-checkin' : 'text-slate-400 hover:text-slate-500'"
       :aria-label="item.label"
       :aria-current="isActive(item) ? 'page' : undefined"
