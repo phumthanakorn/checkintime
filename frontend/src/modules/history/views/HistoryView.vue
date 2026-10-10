@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <PageHeader title="ประวัติการลงเวลา">
+    <PageHeader title="ปฏิทินการลงเวลา">
       <template #actions>
         <router-link
           :to="{ name: 'time-fix' }"
@@ -14,98 +14,67 @@
 
     <MonthSwitcher v-model="month" />
 
-    <!-- เตือนวันที่ลงเวลาไม่ครบ -->
-    <button
-      v-if="incompleteDays.length"
-      type="button"
-      class="flex w-full items-center gap-3 rounded-2xl bg-status-outside/10 p-3.5 text-left"
-      @click="requestFix(incompleteDays[incompleteDays.length - 1])"
-    >
-      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-status-outside text-white">
-        <AppIcon name="warning" :size="20" />
-      </span>
-      <span class="min-w-0 flex-1">
-        <span class="block text-sm font-semibold text-ink">ลงเวลาไม่ครบ {{ incompleteDays.length }} วัน</span>
-        <span class="block text-xs text-ink-muted">แตะเพื่อขอลงเวลาย้อนหลัง ก่อนสรุปเงินเดือน</span>
-      </span>
-      <AppIcon name="caret-right" class="text-status-outside" />
-    </button>
+    <LoadingState v-if="loading && !data" />
 
-    <HistorySummary :records="workedRecords" />
-
-    <LoadingState v-if="attendance.loadingHistory" />
-
-    <EmptyState
-      v-else-if="!attendance.history.length"
-      icon="calendar"
-      title="ไม่มีข้อมูลการลงเวลา"
-      :description="`ยังไม่มีการลงเวลาในเดือน${formatMonth(month)}`"
-    />
-
-    <div v-else class="space-y-2.5">
-      <HistoryItem v-for="record in attendance.history" :key="record.id" :record="record" @select="handleSelect" />
-    </div>
+    <!-- ปฏิทินแสดงวันที่ลงเวลา — แตะวันไหนก็ดูเวลาเข้า-ออกของวันนั้นได้ ถ้าวันไหนไม่มีข้อมูล จะมีปุ่ม
+    "ขอลงเวลาย้อนหลัง" ให้กดจาก CalendarDayDetail ทันที (ดูเงื่อนไข needsFix ในไฟล์นั้น) -->
+    <template v-else-if="data">
+      <CalendarMonth :days="data.days" :selected="selected" @select="selected = $event" />
+      <CalendarDayDetail :day="selectedDay" />
+    </template>
   </div>
-
-  <HistoryDetailSheet v-model="detailOpen" :record="selected" @request-fix="requestFix" />
 </template>
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import MonthSwitcher from '@/components/common/MonthSwitcher.vue'
 import LoadingState from '@/components/feedback/LoadingState.vue'
-import EmptyState from '@/components/feedback/EmptyState.vue'
-import HistorySummary from '../components/HistorySummary.vue'
-import HistoryItem from '../components/HistoryItem.vue'
-import HistoryDetailSheet from '../components/HistoryDetailSheet.vue'
-import { hasPendingFix, isIncomplete, suggestedFixType } from '../recordStatus'
-import { useAttendanceStore } from '@/store'
-import { useNotification } from '@/composables/useNotification'
-import { formatMonth, toMonthKey } from '@/utils/formatters'
+import CalendarMonth from '@/modules/calendar/components/CalendarMonth.vue'
+import CalendarDayDetail from '@/modules/calendar/components/CalendarDayDetail.vue'
+import { calendarService } from '@/api/services/calendarService'
+import { toDateKey, toMonthKey } from '@/utils/formatters'
 
-const attendance = useAttendanceStore()
-const notify = useNotification()
-const router = useRouter()
-
+const today = toDateKey()
 const month = ref(toMonthKey())
-const selected = ref(null)
-const detailOpen = ref(false)
+const data = ref(null)
+const loading = ref(false)
+const selected = ref(today)
 
-// วันที่มาทำงานจริง (ไม่รวมวันที่ไม่มีการลงเวลา)
-const workedRecords = computed(() => attendance.history.filter((r) => !r.missing))
-// วันที่ลงเวลาไม่ครบและยังไม่ได้ส่งคำขอ
-const incompleteDays = computed(() => attendance.history.filter((r) => isIncomplete(r) && !hasPendingFix(r)))
+const selectedDay = computed(() => data.value?.days.find((d) => d.date === selected.value) ?? null)
+
+// ปฏิทินเปล่าของเดือนนั้น (ไม่มีกะ/วันหยุด/วันลา/การลงเวลาเลย) — ใช้ตอนเรียก /calendar ไม่สำเร็จ (เช่น
+// backend ยังไม่พร้อม) กันไม่ให้หน้าว่างเปล่า อย่างน้อยยังเห็นโครงปฏิทินของเดือนที่เลือกไว้รอได้
+function emptyMonthDays(monthKey) {
+  const [y, m] = monthKey.split('-').map(Number)
+  const dayCount = new Date(y, m, 0).getDate()
+  return Array.from({ length: dayCount }, (_, i) => ({
+    date: `${monthKey}-${String(i + 1).padStart(2, '0')}`,
+    shift: null,
+    holiday: null,
+    leave: null,
+    attendance: null,
+    checkIn: null,
+    checkOut: null,
+  }))
+}
 
 watch(
   month,
   async (value) => {
+    loading.value = true
     try {
-      await attendance.fetchHistory(value)
-    } catch (error) {
-      notify.error(error.message)
+      data.value = await calendarService.getMonth({ month: value })
+    } catch {
+      // backend /calendar ยังไม่พร้อม — ไม่ต้อง toast error เพราะเป็นสถานะที่คาดไว้อยู่แล้ว (รอ backend)
+      // ไม่ใช่ปัญหาเครือข่ายที่ผู้ใช้ควรต้องรู้ตอนนี้
+      data.value = { month: value, days: emptyMonthDays(value) }
+    } finally {
+      // เลือกวันนี้ถ้าอยู่ในเดือนที่แสดง ไม่งั้นเลือกวันที่ 1 ของเดือนนั้น
+      selected.value = value === toMonthKey() ? today : `${value}-01`
+      loading.value = false
     }
   },
   { immediate: true },
 )
-
-function handleSelect(record) {
-  // วันที่ไม่มีการลงเวลา: ไปขอลงเวลาย้อนหลังเลย
-  if (record.missing) {
-    requestFix(record)
-    return
-  }
-  selected.value = record
-  detailOpen.value = true
-}
-
-function requestFix(record) {
-  detailOpen.value = false
-  if (hasPendingFix(record)) {
-    router.push({ name: 'time-fix' })
-    return
-  }
-  router.push({ name: 'time-fix', query: { date: record.date, type: suggestedFixType(record) } })
-}
 </script>

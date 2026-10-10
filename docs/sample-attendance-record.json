@@ -1,0 +1,63 @@
+{
+  "_comment": "ตัวอย่างข้อมูล 1 แถวของการลงเวลา (attendance record) ที่ระบบจะบันทึก — โครงสร้างตรงกับที่ buildRecord()/withCheckOut() ใน src/api/mock/mockServer.js สร้างจริง ใช้ดูอ้างอิงเฉยๆ ไม่ใช่ไฟล์ที่แอปอ่าน/เขียนจริง",
+
+  "id": 87,
+  "userId": 1,
+  "date": "2026-10-05",
+
+  "checkIn": "2026-10-05T03:14:22.000Z",
+  "checkInLocation": {
+    "lat": 13.7568421,
+    "lng": 100.5021187,
+    "accuracy": 18
+  },
+  "checkInContext": {
+    "nearestLocation": {
+      "location": {
+        "id": 310570,
+        "name": "Head Office",
+        "type": "office",
+        "typeLabel": "สำนักงาน",
+        "latitude": 13.7051078,
+        "longitude": 100.6470423,
+        "radiusMeters": null,
+        "allowGpsCheckin": true,
+        "allowBeaconCheckin": false,
+        "beaconId": null
+      },
+      "distance": 4312.6
+    },
+    "device": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1",
+    "hasPhoto": true
+  },
+
+  "checkOut": "2026-10-05T11:02:05.000Z",
+  "checkOutLocation": {
+    "lat": 13.7570103,
+    "lng": 100.5019956,
+    "accuracy": 12
+  },
+  "checkOutContext": {
+    "nearestLocation": {
+      "location": {
+        "id": 310570,
+        "name": "Head Office",
+        "type": "office",
+        "typeLabel": "สำนักงาน",
+        "latitude": 13.7051078,
+        "longitude": 100.6470423,
+        "radiusMeters": null,
+        "allowGpsCheckin": true,
+        "allowBeaconCheckin": false,
+        "beaconId": null
+      },
+      "distance": 4298.9
+    },
+    "device": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1",
+    "hasPhoto": true
+  },
+
+  "lateMinutes": 0,
+  "workMinutes": 467,
+  "otMinutes": 32
+}

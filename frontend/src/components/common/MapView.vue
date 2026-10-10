@@ -14,8 +14,9 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 const props = defineProps({
-  /** { lat, lng, radiusMeters, name } */
-  office: { type: Object, required: true },
+  /** { lat, lng, radiusMeters, name } | null — ไม่ใส่ (null) = โหมดโชว์แค่จุดเดียว ไม่มีรัศมี/เส้นประ (ใช้
+   * ตอนย้อนดูพิกัดการสแกนในอดีตที่ไม่มีพิกัดของ "ออฟฟิศ" อ้างอิง มีแต่ชื่อ+ระยะห่างเท่านั้น) */
+  office: { type: Object, default: null },
   /** { lat, lng, accuracy } | null */
   user: { type: Object, default: null },
 })
@@ -24,38 +25,46 @@ const mapEl = ref()
 let map = null
 let userLayer = null
 
-const ariaLabel = computed(() =>
-  props.user ? `แผนที่แสดงตำแหน่งของคุณและ${props.office.name}` : `แผนที่แสดงที่ตั้ง${props.office.name}`,
-)
+const ariaLabel = computed(() => {
+  if (!props.office) return 'แผนที่แสดงตำแหน่งที่บันทึกไว้'
+  return props.user ? `แผนที่แสดงตำแหน่งของคุณและ${props.office.name}` : `แผนที่แสดงที่ตั้ง${props.office.name}`
+})
 
 const pin = (className, html) =>
   L.divIcon({ className: '', html: `<span class="${className}">${html}</span>`, iconSize: [36, 36], iconAnchor: [18, 18] })
 
 function drawUser() {
   userLayer?.remove()
-  const officePoint = [props.office.lat, props.office.lng]
   if (!props.user) {
-    map.setView(officePoint, 16)
+    if (props.office) map.setView([props.office.lat, props.office.lng], 16)
     return
   }
   const userPoint = [props.user.lat, props.user.lng]
-  userLayer = L.layerGroup([
+  const layers = [
     // วงความแม่นยำของ GPS
     L.circle(userPoint, {
       radius: Math.max(props.user.accuracy || 0, 10),
-      color: '#f95738',
+      color: '#dc2626',
       weight: 1,
       fillOpacity: 0.08,
     }),
-    // เส้นประจากผู้ใช้ถึงออฟฟิศ
-    L.polyline([userPoint, officePoint], { color: '#334155', weight: 2, dashArray: '6 8', opacity: 0.7 }),
     L.marker(userPoint, { icon: pin('map-pin map-pin--user', ''), zIndexOffset: 1000 }),
-  ]).addTo(map)
+  ]
+
+  if (!props.office) {
+    userLayer = L.layerGroup(layers).addTo(map)
+    map.setView(userPoint, 17)
+    return
+  }
+
+  const officePoint = [props.office.lat, props.office.lng]
+  // เส้นประจากผู้ใช้ถึงออฟฟิศ — มีแค่ตอนมีจุดออฟฟิศอ้างอิงเท่านั้น
+  layers.push(L.polyline([userPoint, officePoint], { color: '#334155', weight: 2, dashArray: '6 8', opacity: 0.7 }))
+  userLayer = L.layerGroup(layers).addTo(map)
   map.fitBounds(L.latLngBounds([userPoint, officePoint]).pad(0.35), { maxZoom: 17 })
 }
 
 onMounted(() => {
-  const officePoint = [props.office.lat, props.office.lng]
   map = L.map(mapEl.value, { zoomControl: false, attributionControl: true })
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -63,15 +72,18 @@ onMounted(() => {
   }).addTo(map)
   L.control.zoom({ position: 'bottomright' }).addTo(map)
 
-  // พื้นที่ลงเวลาได้ + หมุดออฟฟิศ
-  L.circle(officePoint, {
-    radius: props.office.radiusMeters,
-    color: '#10b981',
-    weight: 2,
-    fillColor: '#10b981',
-    fillOpacity: 0.15,
-  }).addTo(map)
-  L.marker(officePoint, { icon: pin('map-pin map-pin--office', '🏢') }).addTo(map)
+  if (props.office) {
+    const officePoint = [props.office.lat, props.office.lng]
+    // พื้นที่ลงเวลาได้ + หมุดออฟฟิศ
+    L.circle(officePoint, {
+      radius: props.office.radiusMeters,
+      color: '#fd7e14',
+      weight: 2,
+      fillColor: '#fd7e14',
+      fillOpacity: 0.15,
+    }).addTo(map)
+    L.marker(officePoint, { icon: pin('map-pin map-pin--office', '🏢') }).addTo(map)
+  }
 
   drawUser()
 })
@@ -96,23 +108,23 @@ onBeforeUnmount(() => map?.remove())
 }
 
 .map-pin--office {
-  background: #10b981;
+  background: #fd7e14;
 }
 
 .map-pin--user {
   width: 22px;
   height: 22px;
   margin: 7px;
-  background: #f95738;
+  background: #dc2626;
   animation: map-pulse 1.8s ease-out infinite;
 }
 
 @keyframes map-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgb(249 87 56 / 0.5);
+    box-shadow: 0 0 0 0 rgb(220 38 38 / 0.5);
   }
   100% {
-    box-shadow: 0 0 0 18px rgb(249 87 56 / 0);
+    box-shadow: 0 0 0 18px rgb(220 38 38 / 0);
   }
 }
 

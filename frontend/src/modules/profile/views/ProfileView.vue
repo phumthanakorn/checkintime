@@ -53,7 +53,7 @@ import { useAuthStore } from '@/store'
 import { useAuth } from '@/composables/useAuth'
 import { useNotification } from '@/composables/useNotification'
 import { useSettings } from '@/composables/useSettings'
-import { APP_NAME, APP_VERSION, FEATURES, HR_CONTACT_PHONE } from '@/utils/constants'
+import { APP_NAME, APP_VERSION, HR_CONTACT_PHONE } from '@/utils/constants'
 
 const auth = useAuthStore()
 const { user, logout } = useAuth()
@@ -66,14 +66,6 @@ const loggingOut = ref(false)
 const settings = useSettings()
 
 const workMenu = [
-  {
-    key: 'payslip',
-    label: 'สลิปเงินเดือน',
-    description: 'ดูและดาวน์โหลดสลิปย้อนหลัง',
-    icon: 'file-text',
-    bg: 'bg-metric-blue/10',
-    color: 'text-metric-blue',
-  },
   {
     key: 'calendar',
     label: 'ปฏิทินของฉัน',
@@ -98,15 +90,6 @@ const workMenu = [
     bg: 'bg-violet-50',
     color: 'text-violet-500',
   },
-  {
-    key: 'advance',
-    label: 'คำขอเบิกเงิน',
-    description: FEATURES.ADVANCE_REQUEST ? 'ยื่นและติดตามสถานะการเบิก' : 'ยังไม่เปิดให้บริการ',
-    icon: 'wallet',
-    bg: 'bg-metric-cyan/10',
-    color: 'text-metric-cyan',
-    disabled: !FEATURES.ADVANCE_REQUEST,
-  },
 ]
 
 const accountMenu = computed(() => [
@@ -124,14 +107,6 @@ const accountMenu = computed(() => [
     icon: 'lock',
     bg: 'bg-status-checkout/10',
     color: 'text-status-checkout',
-  },
-  {
-    key: 'biometric',
-    label: 'PIN / Biometric',
-    description: user.value?.hasPin ? 'เปิดใช้ PIN แล้ว' : 'ตั้ง PIN เพื่อเข้าสู่ระบบได้เร็วขึ้น',
-    icon: 'fingerprint',
-    bg: 'bg-status-checkin/10',
-    color: 'text-status-checkin',
   },
   {
     key: 'notifications',
@@ -172,20 +147,17 @@ onMounted(async () => {
 
 // key ของเมนู -> ชื่อ route
 const ROUTES = {
-  payslip: 'payslip',
   calendar: 'calendar',
   history: 'history',
   'time-fix': 'time-fix',
   personal: 'profile-personal',
   password: 'profile-password',
-  biometric: 'profile-pin',
   privacy: 'privacy',
 }
 
 function handleSelect(key) {
   if (ROUTES[key]) router.push({ name: ROUTES[key] })
   else if (key === 'contact-hr') window.location.href = `tel:${HR_CONTACT_PHONE.replace(/[^\d+]/g, '')}`
-  else if (key === 'advance' && !FEATURES.ADVANCE_REQUEST) notify.info('บริการเบิกเงินยังไม่เปิดให้ใช้งาน')
 }
 
 function handleToggle(key, value) {

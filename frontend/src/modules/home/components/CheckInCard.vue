@@ -9,20 +9,32 @@
     <div class="relative flex items-center justify-between gap-4">
       <div class="min-w-0">
         <p class="text-[13px] text-white/80">เวลาปัจจุบัน</p>
-        <!-- Clock Hero: Plus Jakarta Sans 48px / 800 -->
+        <!-- Clock Hero: Plus Jakarta Sans 48px / 800 — วินาทีต่อท้ายเล็กกว่า+จางกว่า ไม่แย่งความสนใจจาก
+             นาฬิกาหลัก แค่เพิ่มลูกเล่นว่า "ยังเดินอยู่จริง" เปลี่ยนคีย์ตาม transition ทุกวินาทีให้มันกระพริบเบาๆ -->
         <p class="font-display tabular-nums text-5xl font-extrabold leading-tight tracking-tight">
-          {{ formatClock(now) }}
+          {{ formatClock(now) }}<span class="align-baseline text-2xl font-bold text-white/55"
+            >:<Transition name="tick" mode="out-in"><span :key="formatSeconds(now)">{{ formatSeconds(now) }}</span></Transition></span
+          >
         </p>
         <p class="text-[13px] text-white/80">{{ formatThaiDate(now) }}</p>
-        <p
-          v-if="config.actionable && !loading"
-          class="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-medium"
+        <!-- ป้ายสถานที่ลงเวลาที่ใกล้ตำแหน่งปัจจุบันที่สุด — แสดงไว้ให้ดูเฉยๆ ไม่ได้บังคับว่าต้องลงที่นี่
+             (ดึงจาก useGeofence().nearest ซึ่งหาจากรายชื่อสถานที่จริงทั้งหมด ไม่ใช่ที่ fix ไว้ตายตัว)
+             แตะได้ — เปิด popup แผนที่ดูตำแหน่งสถานที่ + ตำแหน่งตัวเองเทียบกัน -->
+        <button
+          v-if="nearestLocation"
+          type="button"
+          class="mt-2 flex w-full max-w-full items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-medium active:bg-white/25"
+          @click="emit('location-click')"
         >
-          <AppIcon name="hand-tap" :size="14" />
-          แตะค้างไว้เพื่อลงเวลา
-        </p>
+          <AppIcon name="map-pin" :size="14" class="shrink-0" />
+          <!-- min-w-0 จำเป็นสำหรับ flex child ถึงจะยอม shrink ให้ truncate ทำงาน (ไม่งั้น span จะดันความกว้าง
+               ปุ่มจนล้นแล้วตัวหนังสือตก 2 บรรทัดแทนที่จะตัด ... แบบที่ตั้งใจ) -->
+          <span class="min-w-0 flex-1 truncate text-left">{{ nearestLocation.location.name }}</span>
+          <span class="shrink-0 text-white/70">· {{ formatDistance(nearestLocation.distance) }}</span>
+        </button>
+
         <p
-          v-else-if="config.help"
+          v-if="config.help"
           class="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-medium"
         >
           <AppIcon name="map-pin" :size="14" />
@@ -31,56 +43,24 @@
       </div>
 
       <div class="relative shrink-0">
-        <!-- วงแหวนความคืบหน้าขณะกดค้าง -->
-        <svg
-          v-if="config.actionable && !loading"
-          class="pointer-events-none absolute -inset-1.5 h-[116px] w-[116px]"
-          viewBox="0 0 116 116"
-          aria-hidden="true"
-        >
-          <rect x="2" y="2" width="112" height="112" rx="21" fill="none" stroke="rgb(255 255 255 / 0.3)" stroke-width="3" />
-          <rect
-            x="2"
-            y="2"
-            width="112"
-            height="112"
-            rx="21"
-            fill="none"
-            stroke="white"
-            stroke-width="4"
-            stroke-linecap="round"
-            pathLength="100"
-            stroke-dasharray="100"
-            :stroke-dashoffset="100 - progress * 100"
-            :class="!holding && 'transition-[stroke-dashoffset] duration-300 ease-out'"
-          />
-        </svg>
-
         <button
           type="button"
-          class="hold-button flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-2xl bg-card px-2 shadow-md transition-transform duration-150"
-          :class="holding && 'scale-95'"
+          class="tap-button flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-2xl bg-card px-2 shadow-md transition-transform duration-150 active:scale-95"
           :disabled="(!config.actionable && !config.help) || loading"
-          :aria-label="config.help ? 'อยู่นอกพื้นที่ แตะเพื่อดูแผนที่' : `กดค้างเพื่อ${config.label}`"
-          @click="config.help && emit('help')"
-          @pointerdown="onPointerDown"
-          @pointerup="cancel"
-          @pointercancel="cancel"
-          @keydown.enter.space.prevent="onKeyDown"
-          @keyup.enter.space.prevent="cancel"
-          @contextmenu.prevent
+          :aria-label="config.help ? 'อยู่นอกพื้นที่ แตะเพื่อดูแผนที่' : config.label"
+          @click="onClick"
         >
           <LoadingDots v-if="loading" size="lg" class="h-12" :class="config.text" />
           <span
             v-else-if="config.iconBg"
-            class="flex h-12 w-12 items-center justify-center rounded-full text-white transition-transform duration-150"
-            :class="[config.iconBg, holding && 'scale-110']"
+            class="flex h-12 w-12 items-center justify-center rounded-full text-white"
+            :class="config.iconBg"
           >
             <AppIcon :name="config.icon" :size="26" weight="bold" />
           </span>
           <AppIcon v-else :name="config.icon" :size="46" weight="fill" :class="config.text" />
           <span class="whitespace-pre-line text-center text-xs font-semibold leading-tight" :class="config.text">
-            {{ loading ? 'กำลังบันทึก...' : holding ? 'ค้างไว้...' : config.label }}
+            {{ loading ? 'กำลังบันทึก...' : config.label }}
           </span>
         </button>
       </div>
@@ -89,18 +69,25 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
-import { useHoldPress } from '@/composables/useHoldPress'
+import { computed } from 'vue'
 import { CLOCK_STATE } from '@/utils/constants'
-import { formatClock, formatThaiDate } from '@/utils/formatters'
+import { formatClock, formatSeconds, formatThaiDate } from '@/utils/formatters'
 
 const props = defineProps({
   state: { type: String, required: true, validator: (v) => Object.values(CLOCK_STATE).includes(v) },
   now: { type: Date, required: true },
   loading: { type: Boolean, default: false },
+  /** { location: {name, ...}, distance: number } | null — จาก useGeofence().nearest */
+  nearestLocation: { type: Object, default: null },
 })
 
-const emit = defineEmits(['action', 'help'])
+/** 85 -> '85 ม.', 1340 -> '1.3 กม.' */
+function formatDistance(meters) {
+  if (meters < 1000) return `${Math.round(meters)} ม.`
+  return `${(meters / 1000).toFixed(1)} กม.`
+}
+
+const emit = defineEmits(['action', 'help', 'location-click'])
 
 // สีตาม Card Status Palette (ดู tokens ใน assets/css/tailwind.css)
 const STATE_CONFIG = {
@@ -113,15 +100,19 @@ const STATE_CONFIG = {
     actionable: true,
   },
   [CLOCK_STATE.WORKING]: {
-    card: 'bg-status-checkout shadow-status-checkout/30',
-    iconBg: 'bg-status-checkout',
-    text: 'text-status-checkout',
+    // ใช้ action-checkout (กรมท่าเข้ม) ไม่ใช่ status-checkout (Amber) — status-checkout ถูกใช้เป็นสี
+    // warning ทั่วแอปอยู่แล้ว สีมันใกล้กับ checkin (ส้ม) เกินไปจนแยกยากบนจอเล็ก (ตามที่ผู้ใช้ทักมา)
+    card: 'bg-action-checkout shadow-action-checkout/30',
+    iconBg: 'bg-action-checkout',
+    text: 'text-action-checkout',
     icon: 'sign-out',
     label: 'กดออกงาน',
     actionable: true,
   },
   [CLOCK_STATE.DONE]: {
-    card: 'bg-status-done shadow-status-done/30',
+    // ใช้ action-done (เขียว) ไม่ใช่ status-done (เทาเข้ม) — status-done ใช้เป็นสีกลางๆ ทั่วแอปอยู่แล้ว แถม
+    // สีใกล้เคียง action-checkout (กรมท่าเข้มทั้งคู่) มากจนแยกยากบนจอเล็ก (ตามที่ผู้ใช้ทักมา)
+    card: 'bg-action-done shadow-action-done/30',
     iconBg: null,
     text: 'text-status-checkin',
     icon: 'seal-check',
@@ -135,44 +126,45 @@ const STATE_CONFIG = {
     icon: 'map-pin',
     label: 'อยู่นอกพื้นที่',
     actionable: false,
-    help: true, // แตะธรรมดา (ไม่ต้องกดค้าง) เพื่อเปิดหน้าแผนที่
+    help: true, // แตะเพื่อเปิดหน้าแผนที่ (ไม่ใช่ action ลงเวลา เลยแยก flag ไว้ต่างหากจาก actionable)
   },
 }
 
 const config = computed(() => STATE_CONFIG[props.state])
 
-// กดค้างครบ 1 วินาทีจึงส่ง action (กันกดโดนโดยไม่ตั้งใจ)
-const { progress, holding, begin, cancel, reset } = useHoldPress(() => {
+// แตะครั้งเดียวก็ส่ง action เลย — ไม่ต้องกดค้างแล้ว เพราะขั้นถ่ายภาพยืนยันตัวตน (CameraCaptureModal ฝั่ง
+// HomeView.vue) ทำหน้าที่ "กันกดโดนโดยไม่ตั้งใจ" แทนอยู่แล้ว ถ่ายภาพเองก็ต้องตั้งใจกดอยู่แล้วในตัว
+function onClick() {
+  if (config.value.help) {
+    emit('help')
+    return
+  }
+  if (!config.value.actionable || props.loading) return
   emit('action', props.state)
-  // คืนวงแหวนหลังส่ง action (กรณีไม่ได้เปลี่ยนสถานะ เช่น อยู่นอกพื้นที่)
-  setTimeout(reset, 600)
-})
-
-watch(
-  () => [props.state, props.loading],
-  () => reset(),
-)
-
-function onPointerDown(event) {
-  if (!config.value.actionable) return
-  if (event.button !== 0) return
-  // จับ pointer ไว้ นิ้วเลื่อนเล็กน้อยก็ยังนับว่ากดค้างอยู่
-  event.currentTarget.setPointerCapture?.(event.pointerId)
-  begin()
-}
-
-function onKeyDown(event) {
-  if (config.value.help) return emit('help')
-  if (!config.value.actionable) return
-  if (!event.repeat) begin()
 }
 </script>
 
 <style scoped>
-.hold-button {
-  touch-action: none;
+.tap-button {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+}
+
+/* วินาทีกระพริบเบาๆ ทุกครั้งที่เปลี่ยนเลข */
+.tick-enter-active,
+.tick-leave-active {
+  transition: opacity 0.15s ease;
+}
+.tick-enter-from,
+.tick-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tick-enter-active,
+  .tick-leave-active {
+    transition-duration: 0.01s;
+  }
 }
 </style>

@@ -1,24 +1,35 @@
 <template>
-  <div class="space-y-5">
-    <StatePreviewSwitcher v-if="SHOW_STATE_PREVIEW" v-model="previewState" @celebrate="previewCelebration" />
-
+  <div class="home-stagger space-y-5">
     <LocationPermissionBanner />
 
-    <CheckInCard :state="displayState" :now="now" :loading="attendance.submitting" @action="handleAction" @help="openOutOfArea" />
+    <CheckInCard
+      :state="clockState"
+      :now="now"
+      :loading="attendance.submitting"
+      :nearest-location="geofence.nearest.value"
+      @action="handleAction"
+      @help="openOutOfArea"
+      @location-click="locationMapOpen = true"
+    />
 
-    <AttendanceStats :summary="displaySummary" />
+    <TodayAttendanceCard :record="attendance.today" />
 
     <RequestStatusList :items="attendance.requestStatus" @select="handleSelectRequest" />
   </div>
 
-  <ConfirmModal
-    v-model="confirmCheckOut"
-    title="ยืนยันการออกงาน"
-    :message="`ลงเวลาออกงานเวลา ${formatClock(now)} ใช่หรือไม่?`"
-    confirm-text="ออกงาน"
-    color="warning"
-    :loading="attendance.submitting"
-    @confirm="doCheckOut"
+  <!-- ถ่ายเซลฟี่ยืนยันตัวตนก่อนลงเวลา — แทนที่การกดค้างแล้วลงเวลาทันทีแบบเดิม (ทั้งเข้างาน/ออกงาน ใช้ชุดเดียวกัน
+       ไม่แยก flow เพราะเป็นปุ่มเดียวกัน แค่ label/สีเปลี่ยนตามสถานะ) -->
+  <CameraCaptureModal
+    v-model="cameraOpen"
+    :title="pendingAction === CLOCK_STATE.WORKING ? 'ถ่ายภาพยืนยันออกงาน' : 'ถ่ายภาพยืนยันเข้างาน'"
+    @confirm="handlePhotoConfirmed"
+  />
+
+  <!-- Popup แผนที่สถานที่ลงเวลาที่ใกล้ที่สุด — เปิดตอนแตะป้ายชื่อสถานที่บนการ์ด ดูเฉยๆ ไม่เกี่ยวกับการบังคับ -->
+  <LocationMapModal
+    v-model="locationMapOpen"
+    :location="geofence.nearest.value?.location"
+    :user="geofence.position.value"
   />
 
   <OfflineSheet v-model="offlineOpen" />
@@ -30,31 +41,19 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import CheckInCard from '../components/CheckInCard.vue'
-import AttendanceStats from '../components/AttendanceStats.vue'
+import TodayAttendanceCard from '../components/TodayAttendanceCard.vue'
 import RequestStatusList from '../components/RequestStatusList.vue'
-import StatePreviewSwitcher from '../components/StatePreviewSwitcher.vue'
 import ClockSuccessOverlay from '../components/ClockSuccessOverlay.vue'
 import LocationPermissionBanner from '../components/LocationPermissionBanner.vue'
 import OfflineSheet from '../components/OfflineSheet.vue'
+import CameraCaptureModal from '../components/CameraCaptureModal.vue'
+import LocationMapModal from '../components/LocationMapModal.vue'
 import { useOnline } from '@/composables/useOnline'
-import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useAttendanceStore } from '@/store'
 import { useNow } from '@/composables/useNow'
 import { useGeofence } from '@/composables/useGeofence'
 import { useNotification } from '@/composables/useNotification'
-import { CLOCK_STATE, REQUEST_TYPES, USE_MOCK } from '@/utils/constants'
-import { formatClock } from '@/utils/formatters'
-
-// แสดงแถบดูตัวอย่างสถานะเฉพาะตอนพัฒนา หรือโหมด mock
-const SHOW_STATE_PREVIEW = import.meta.env.DEV || USE_MOCK
-
-// ตัวเลขสรุปตัวอย่างของแต่ละสถานะ (ตามแบบ UI)
-const PREVIEW_SUMMARY = {
-  [CLOCK_STATE.READY]: { leaveRemainingDays: 20, lateCount: 1, lateMinutes: 580, otMinutes: 25 },
-  [CLOCK_STATE.WORKING]: { leaveRemainingDays: 20, lateCount: 1, lateMinutes: 580, otMinutes: 25 },
-  [CLOCK_STATE.DONE]: { leaveRemainingDays: 20, lateCount: 0, lateMinutes: 0, otMinutes: 0 },
-  [CLOCK_STATE.OUT_OF_AREA]: { leaveRemainingDays: 20, lateCount: 0, lateMinutes: 0, otMinutes: 0 },
-}
+import { CLOCK_STATE, REQUEST_TYPES } from '@/utils/constants'
 
 const attendance = useAttendanceStore()
 const geofence = useGeofence()
@@ -62,15 +61,15 @@ const notify = useNotification()
 const router = useRouter()
 const now = useNow()
 
-const confirmCheckOut = ref(false)
+const cameraOpen = ref(false)
+const pendingAction = ref(null) // CLOCK_STATE.READY | CLOCK_STATE.WORKING — รอถ่ายภาพยืนยันอยู่สำหรับ action ไหน
+const locationMapOpen = ref(false)
 const offlineOpen = ref(false)
 const online = useOnline()
 
-/** หน้าแผนที่เมื่ออยู่นอกพื้นที่ (โหมดตัวอย่างใช้ตำแหน่งจำลอง) */
 function openOutOfArea() {
-  router.push({ name: 'out-of-area', query: previewState.value ? { demo: 1 } : {} })
+  router.push({ name: 'out-of-area' })
 }
-const previewState = ref(null)
 
 // หน้าจอฉลองหลังลงเวลาสำเร็จ
 const celebration = reactive({ open: false, props: {} })
@@ -91,22 +90,12 @@ function celebrateRecord(record) {
   }
 }
 
-// ตัวอย่างจากแถบ UI preview
-function previewCelebration(variant) {
-  celebrate(variant, { lateMinutes: 12, workMinutes: 545 })
-}
-
 const clockState = computed(() => {
   if (attendance.hasCheckedOut) return CLOCK_STATE.DONE
   if (!geofence.inside.value) return CLOCK_STATE.OUT_OF_AREA
   if (attendance.hasCheckedIn) return CLOCK_STATE.WORKING
   return CLOCK_STATE.READY
 })
-
-const displayState = computed(() => previewState.value ?? clockState.value)
-const displaySummary = computed(() =>
-  previewState.value ? PREVIEW_SUMMARY[previewState.value] : attendance.summary,
-)
 
 onMounted(async () => {
   geofence.refresh()
@@ -118,17 +107,6 @@ onMounted(async () => {
 })
 
 async function handleAction(state) {
-  // โหมดดูตัวอย่าง: เปลี่ยนสถานะบนหน้าจออย่างเดียว ไม่เรียก API
-  if (previewState.value) {
-    if (state === CLOCK_STATE.READY) {
-      previewState.value = CLOCK_STATE.WORKING
-      celebrate('checkin-ontime')
-    } else if (state === CLOCK_STATE.WORKING) {
-      confirmCheckOut.value = true
-    }
-    return
-  }
-
   // ไม่มีอินเทอร์เน็ต -> อธิบายวิธีแก้
   if (!online.value) {
     offlineOpen.value = true
@@ -142,38 +120,80 @@ async function handleAction(state) {
     return
   }
 
-  if (state === CLOCK_STATE.READY) await doCheckIn()
-  else if (state === CLOCK_STATE.WORKING) confirmCheckOut.value = true
+  // กดค้างผ่านแล้ว (ยืนยันว่าตั้งใจกดจริง) ต่อด้วยถ่ายภาพยืนยันตัวตน — ยังไม่เรียก check-in/check-out จนกว่า
+  // จะถ่ายภาพและกด "ยืนยัน" ใน CameraCaptureModal เสร็จ (ดู handlePhotoConfirmed)
+  pendingAction.value = state
+  cameraOpen.value = true
 }
 
-async function doCheckIn() {
+/** ถ่ายภาพยืนยันเสร็จแล้ว (จาก CameraCaptureModal) — ค่อยเรียก check-in/check-out จริงตามที่ค้างไว้ */
+async function handlePhotoConfirmed(photo) {
+  const action = pendingAction.value
+  pendingAction.value = null
+  if (action === CLOCK_STATE.READY) await doCheckIn(photo)
+  else if (action === CLOCK_STATE.WORKING) await doCheckOut(photo)
+}
+
+/** ข้อมูลประกอบตอนลงเวลา: GPS, สถานที่ใกล้สุด, อุปกรณ์ และรูปถ่าย */
+function buildCheckContext(photo) {
+  return {
+    location: geofence.position.value,
+    nearestLocation: geofence.nearest.value,
+    device: navigator.userAgent,
+    photo,
+  }
+}
+
+async function doCheckIn(photo) {
   try {
-    celebrateRecord(await attendance.checkIn(geofence.position.value))
+    celebrateRecord(await attendance.checkIn(buildCheckContext(photo)))
   } catch (error) {
     notify.error(error.message)
   }
 }
 
-async function doCheckOut() {
-  if (previewState.value) {
-    previewState.value = CLOCK_STATE.DONE
-    confirmCheckOut.value = false
-    celebrate('checkout', { workMinutes: 545 })
-    return
-  }
-
+async function doCheckOut(photo) {
   try {
-    const record = await attendance.checkOut(geofence.position.value)
-    confirmCheckOut.value = false
-    celebrateRecord(record)
+    celebrateRecord(await attendance.checkOut(buildCheckContext(photo)))
   } catch (error) {
     notify.error(error.message)
   }
 }
 
 function handleSelectRequest(type) {
+  // RequestStatusList กรองเหลือแค่ประเภทที่เปิดใช้งานจริงแล้ว (ดู FEATURES ใน utils/constants.js) เลยมีแค่
+  // 2 เคสนี้ให้เลือกเท่านั้น
   if (type === REQUEST_TYPES.LEAVE) router.push({ name: 'leave' })
   else if (type === REQUEST_TYPES.TIME_FIX) router.push({ name: 'time-fix' })
-  else notify.info('บริการเบิกเงินยังไม่เปิดให้ใช้งาน')
 }
 </script>
+
+<style scoped>
+/* การ์ดแต่ละส่วนไล่ fade และเลื่อนขึ้นเมื่อเปิดหน้าหลัก */
+.home-stagger > * {
+  animation: home-fade-up 0.45s ease-out both;
+}
+.home-stagger > *:nth-child(1) { animation-delay: 0s; }
+.home-stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.home-stagger > *:nth-child(3) { animation-delay: 0.12s; }
+.home-stagger > *:nth-child(4) { animation-delay: 0.18s; }
+.home-stagger > *:nth-child(5) { animation-delay: 0.24s; }
+
+@keyframes home-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-stagger > * {
+    animation-duration: 0.01s !important;
+    animation-delay: 0s !important;
+  }
+}
+</style>

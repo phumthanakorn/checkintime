@@ -5,7 +5,7 @@
     <section class="flex items-start gap-3 rounded-2xl bg-status-checkin/10 p-4">
       <AppIcon name="shield-check" :size="28" weight="duotone" class="text-status-checkin" />
       <p class="text-xs leading-relaxed text-ink">
-        บริษัทเก็บและใช้ข้อมูลของคุณเท่าที่จำเป็นต่อการลงเวลาทำงาน การลา และการจ่ายเงินเดือนเท่านั้น
+        บริษัทเก็บและใช้ข้อมูลของคุณเท่าที่จำเป็นต่อการลงเวลาทำงานและการลาเท่านั้น
         <span class="text-ink-muted">ปรับปรุงล่าสุด {{ UPDATED_AT }}</span>
       </p>
     </section>

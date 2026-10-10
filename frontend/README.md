@@ -3,7 +3,7 @@
 แอปลงเวลาเข้า-ออกงานสำหรับพนักงาน ออกแบบสำหรับมือถือ (บนจอใหญ่จะแสดงเป็นคอลัมน์กลางจอ)
 
 **Stack:** Vue 3 + Vite + Pinia + Vue Router + Vuetify + Tailwind CSS 4 + Axios
-
+https://claude.ai/artifact/UCiNKqUjD6vKVySzGEN9Q5
 ## เริ่มใช้งาน
 
 ```bash
@@ -12,17 +12,11 @@ npm run dev      # http://localhost:5173
 npm run build
 ```
 
-โหมด mock (ค่าเริ่มต้น) เก็บข้อมูลใน localStorage ใช้ทดลองได้ทันทีโดยไม่ต้องมี backend
-
-- บัญชีทดลอง: `EMP-2569001` / `123456` (OTP ลืมรหัสผ่าน: `123456`)
-- ล้างข้อมูลทดลอง: ลบ localStorage key `cit_mock_db`
-
 ## ตั้งค่า (.env)
 
 | ตัวแปร | ความหมาย |
 | --- | --- |
-| `VITE_API_BASE_URL` | base URL ของ API (ค่าเริ่มต้น `/api` และ dev server จะ proxy ไป `http://localhost:3000`) |
-| `VITE_USE_MOCK` | `true` = ใช้ mock, `false` = เรียก backend จริง |
+| `VITE_API_BASE_URL` | base URL ของ API (`/api/checkin`; Vite proxy ส่งไป PHP ที่ `http://localhost:8080`) |
 | `VITE_ENFORCE_GEOFENCE` | `true` = ลงเวลาได้เฉพาะในพื้นที่ที่กำหนด |
 | `VITE_OFFICE_LAT` / `VITE_OFFICE_LNG` / `VITE_OFFICE_RADIUS` | พิกัดสำนักงานและรัศมี (เมตร) |
 
@@ -34,7 +28,6 @@ src/
 ├── api/
 │   ├── axiosClient.js        axios กลาง (แนบ token, จัดการ 401, แปลง error)
 │   ├── services/             authService, attendanceService, leaveService, requestService
-│   └── mock/mockServer.js    mock API (สลับด้วย VITE_USE_MOCK)
 ├── assets/css/               tailwind.css, main.css
 ├── plugins/                  pinia.js, vuetify.js
 ├── router/                   index.js (guard), routes.js (รายการ route)
@@ -46,11 +39,11 @@ src/
 │   ├── common/               AppButton, ConfirmModal, AppBottomSheet, DateField,
 │   │                         MonthSwitcher, SegmentedTabs, StatusBadge, AppIcon, AppDatePicker,
 │   │                         DateRangeField, AppTimePicker, TimeField, AttachmentField, AttachmentList,
-│   │                         TextField, PasswordField, PinPad, OtpInput, ToggleSwitch
+│   │                         TextField, PasswordField, OtpInput, ToggleSwitch
 │   ├── feedback/             LoadingDots, LoadingState, ToastNotification, EmptyState
 │   └── layout/               AppHeader, AppBottomNav, PageHeader
 └── modules/
-    ├── auth/                 LoginForm | LoginView, ForgotPasswordView, PinLoginView
+    ├── auth/                 LoginForm | LoginView, ForgotPasswordView
     ├── home/                 CheckInCard, AttendanceStats, RequestStatusList, OfflineSheet,
     │                         LocationPermissionBanner | HomeView, OutOfAreaView
     ├── history/              HistorySummary, HistoryItem, HistoryDetailSheet | HistoryView
@@ -62,8 +55,7 @@ src/
     ├── leave/                LeaveBalanceList, LeaveRequestItem, LeaveRequestForm,
     │                         LeaveDetailSheet | LeaveView
     ├── profile/              ProfileCard, MenuGroup | ProfileView (แท็บ "ฉัน"), PersonalInfoView,
-    │                         ChangePasswordView, PinSettingsView, SettingsView, PrivacyView
-    ├── payslip/              NetPayCard, PayslipSection | PayslipView (เข้าจากแท็บ "ฉัน")
+    │                         ChangePasswordView, SettingsView, PrivacyView
     └── system/               NotFoundView
 ```
 
@@ -76,21 +68,19 @@ src/
 | `done` ลงเวลาครบแล้ว | เทาเข้ม | เช็คอินครบแล้วสำหรับวันนี้ |
 | `out_of_area` นอกพื้นที่ | แดงส้ม | อยู่นอกพื้นที่ (กดไม่ได้) |
 
-## API ที่ frontend คาดหวัง (เมื่อ VITE_USE_MOCK=false)
+## API ที่ frontend เรียกใช้
 
 | Method | Path | ใช้ทำอะไร |
 | --- | --- | --- |
 | POST | `/auth/login` `{ username, password }` | คืน `{ token, user }` |
 | GET | `/auth/me` | ข้อมูลผู้ใช้ |
 | POST | `/auth/logout` | ออกจากระบบ |
-| POST | `/auth/login/pin` `{ employeeCode, pin }` | เข้าสู่ระบบด้วย PIN |
 | POST | `/auth/password/forgot` `{ username }` | ส่ง OTP → `{ maskedPhone, refCode }` |
 | POST | `/auth/password/verify-otp` `{ username, otp }` | ยืนยัน OTP → `{ resetToken }` |
 | POST | `/auth/password/reset` `{ resetToken, newPassword }` | ตั้งรหัสผ่านใหม่ |
 | PUT | `/me/profile` `{ phone, email, address, emergencyContact, avatarUrl }` | แก้ไขข้อมูลส่วนตัว → user |
 | POST | `/me/password` `{ currentPassword, newPassword }` | เปลี่ยนรหัสผ่าน |
 | POST | `/me/consents` `{ policyVersion, location }` | ยินยอม PDPA (บังคับก่อนใช้งาน) → user |
-| POST / DELETE | `/me/pin` `{ pin }` | ตั้ง / ปิด PIN (backend ต้องเก็บแบบ hash) |
 | GET | `/attendance/today` | รายการวันนี้ หรือ `null` |
 | POST | `/attendance/check-in` `{ location }` | เข้างาน |
 | POST | `/attendance/check-out` `{ location }` | ออกงาน |
@@ -103,8 +93,6 @@ src/
 | GET | `/time-fix/requests` | คำขอลงเวลาย้อนหลัง |
 | POST | `/time-fix/requests` `{ date, fixType, checkIn, checkOut, reason }` | ขอลงเวลาย้อนหลัง (`fixType`: check_in / check_out / both) |
 | POST | `/time-fix/requests/:id/cancel` | ยกเลิกคำขอที่รออนุมัติ |
-| GET | `/payslips` | เดือนที่สลิปออกแล้ว `[{ month, netPay }]` |
-| GET | `/payslips/:month` | รายละเอียดสลิป (รายได้, รายการหัก, ยอดสุทธิ, สรุปเวลาทำงาน) — 404 ถ้ายังไม่ออก |
 | GET | `/calendar?month=YYYY-MM` | ปฏิทินรายวัน: กะ วันหยุด วันลา สถานะลงเวลา |
 | GET | `/announcements/:id` | รายละเอียดประกาศ |
 | POST | `/announcements/:id/acknowledge` | กดรับทราบประกาศ |

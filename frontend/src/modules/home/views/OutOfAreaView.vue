@@ -115,7 +115,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import MapView from '@/components/common/MapView.vue'
 import { useGeolocation } from '@/composables/useGeolocation'
@@ -123,7 +123,6 @@ import { OFFICE_LOCATION } from '@/utils/constants'
 import { toDateKey } from '@/utils/formatters'
 import { distanceMeters } from '@/utils/geo'
 
-const route = useRoute()
 const router = useRouter()
 const { requestPosition } = useGeolocation()
 
@@ -149,13 +148,7 @@ function formatDistance(meters) {
 
 async function refresh() {
   checking.value = true
-  // โหมดตัวอย่าง (?demo=1): จำลองว่าอยู่ห่างออฟฟิศ ~1.2 กม.
-  if (route.query.demo) {
-    await new Promise((r) => setTimeout(r, 400))
-    position.value = { lat: OFFICE_LOCATION.lat + 0.0085, lng: OFFICE_LOCATION.lng + 0.0068, accuracy: 25 }
-  } else {
-    position.value = (await requestPosition()).position
-  }
+  position.value = (await requestPosition()).position
   checking.value = false
 }
 

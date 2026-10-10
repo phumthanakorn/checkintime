@@ -3,18 +3,7 @@
     <v-menu location="bottom start">
       <template #activator="{ props }">
         <button v-bind="props" class="shrink-0 rounded-full" aria-label="เมนูผู้ใช้">
-          <img
-            v-if="user?.avatarUrl"
-            :src="user.avatarUrl"
-            :alt="user.name"
-            class="h-11 w-11 rounded-full object-cover"
-          />
-          <span
-            v-else
-            class="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-700"
-          >
-            {{ getInitials(user?.name) }}
-          </span>
+          <EmployeeAvatar :src="user?.avatarUrl" :name="user?.name || ''" :size="44" class="" />
         </button>
       </template>
       <v-list density="compact" min-width="180">
@@ -49,10 +38,10 @@
 </template>
 
 <script setup>
+import EmployeeAvatar from '@/components/common/EmployeeAvatar.vue'
 import { onMounted } from 'vue'
 import { useNotificationStore } from '@/store'
 import { useAuth } from '@/composables/useAuth'
-import { getInitials } from '@/utils/formatters'
 
 const { user, logout } = useAuth()
 const notifications = useNotificationStore()

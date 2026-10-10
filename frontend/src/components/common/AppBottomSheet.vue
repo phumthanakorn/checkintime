@@ -37,3 +37,9 @@ defineProps({
   persistent: { type: Boolean, default: false },
 })
 </script>
+
+<style>
+.v-bottom-sheet > .v-bottom-sheet__content.v-overlay__content {
+  box-shadow: none !important;
+}
+</style>

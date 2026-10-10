@@ -212,8 +212,8 @@ defineExpose({ goToday })
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 9999px;
-  background: #f8faff;
-  color: #0f172a;
+  background: #fff8f2;
+  color: #1e293b;
   transition: background 0.15s;
 }
 

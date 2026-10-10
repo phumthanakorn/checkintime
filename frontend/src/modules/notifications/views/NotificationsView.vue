@@ -27,7 +27,7 @@
 
     <template v-else>
       <section v-for="group in groups" :key="group.label" class="space-y-2.5">
-        <h2 class="px-1 pt-1 text-[13px] font-semibold text-ink-muted">{{ group.label }}</h2>
+        <h2 class="px-1 pt-1 text-[13px] font-semibold text-primary-dark">{{ group.label }}</h2>
         <NotificationItem v-for="item in group.items" :key="item.id" :notification="item" @select="open" />
       </section>
     </template>

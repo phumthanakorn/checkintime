@@ -1,0 +1,1 @@
+const n=t=>t*Math.PI/180;function c(t,a){const s=n(a.lat-t.lat),o=n(a.lng-t.lng),M=Math.sin(s/2)**2+Math.cos(n(t.lat))*Math.cos(n(a.lat))*Math.sin(o/2)**2;return 2*6371e3*Math.asin(Math.sqrt(M))}export{c as d};

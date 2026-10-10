@@ -2,6 +2,12 @@
 node_modules/
 dist/
 
+# Backend config — มีรหัสผ่านจริง (DB, JWT secret, Gmail App Password) ห้าม commit เด็ดขาด
+backend/config/db.php
+backend/config/jwt.php
+backend/config/mail.php
+backend/config/app.php
+
 # Local env overrides (ค่าที่เป็นความลับให้ใส่ใน .env.local ซึ่งจะไม่ถูก commit)
 *.local
 .env.*.local
@@ -16,3 +22,4 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+.tools/

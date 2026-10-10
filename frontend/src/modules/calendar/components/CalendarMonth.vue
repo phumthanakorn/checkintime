@@ -1,21 +1,9 @@
 <template>
   <section class="rounded-[28px] bg-card p-4 shadow-sm">
-    <!-- สรุปเดือน -->
-    <div class="mb-4 grid grid-cols-4 gap-2">
-      <div v-for="stat in summary" :key="stat.label" class="rounded-2xl px-1 py-2 text-center" :class="stat.bg">
-        <p class="font-display text-lg font-bold leading-tight" :class="stat.color">{{ stat.value }}</p>
-        <p class="text-[10px] text-ink-muted">{{ stat.label }}</p>
-      </div>
-    </div>
-
-    <!-- หัววัน -->
+    <!-- หัววัน — ไม่ไฮไลต์เสาร์/อาทิตย์เป็นสีแดง เพราะยังไม่มีระบบกะงานจริงมายืนยันว่าวันไหนเป็นวันหยุดจริง
+    (บริษัทนี้อาจทำงานวันเสาร์ก็ได้) สีเดียวกันทุกวันจนกว่าจะมีข้อมูลกะมาต่อ -->
     <div class="grid grid-cols-7">
-      <span
-        v-for="(label, index) in WEEKDAYS"
-        :key="label"
-        class="pb-2 text-center text-[11px] font-semibold"
-        :class="index >= 5 ? 'text-rose-400' : 'text-ink-muted'"
-      >
+      <span v-for="label in WEEKDAYS" :key="label" class="pb-2 text-center text-[11px] font-semibold text-ink-muted">
         {{ label }}
       </span>
     </div>
@@ -98,7 +86,8 @@ const DAY_LEGEND = [
   { label: 'รออนุมัติ', swatch: 'border-[1.5px] border-dashed border-slate-400' },
 ]
 
-const STATUS_LEGEND = ['on_time', 'late', 'missing'].map((key) => ({
+// ตัด 'late' ออกจากที่แสดงจริง — backend ไม่มีทางส่งค่านี้มาแล้ว (ไม่มีการตัดสินสาย/OT อีกต่อไป)
+const STATUS_LEGEND = ['on_time', 'missing'].map((key) => ({
   label: key === 'missing' ? 'ขาด / ลงเวลาไม่ครบ' : DAY_STATUS_META[key].label,
   dot: DAY_STATUS_META[key].dot,
 }))
@@ -125,36 +114,12 @@ function circleClass(day) {
     classes.push('text-ink')
   }
 
-  if (isSelected) classes.push(isToday ? 'ring-2 ring-status-checkin ring-offset-2' : 'ring-2 ring-ink ring-offset-1')
+  // วันที่เลือก (ไม่ใช่วันนี้): ขอบบางๆ สีเทา ไม่ใช่ ring หนาสีดำ (ดูแข็ง/ไม่เข้าธีม) ring-offset ออกด้วย
+  // เพราะช่องว่างระหว่างวงกับตัวเลขทำให้ดูเป็นวงแยกจากตัวเลข ไม่กลมกลืน
+  if (isSelected) classes.push(isToday ? 'ring-2 ring-status-checkin ring-offset-2' : 'ring-[1.5px] ring-slate-300')
   else if (!isToday) classes.push('hover:bg-slate-100')
   return classes
 }
-
-// สรุปเดือน
-const summary = computed(() => {
-  const count = (fn) => props.days.filter(fn).length
-  return [
-    {
-      label: 'มาทำงาน',
-      value: count((d) => ['on_time', 'late', 'incomplete', 'working'].includes(d.attendance)),
-      bg: 'bg-status-checkin/10',
-      color: 'text-status-checkin',
-    },
-    {
-      label: 'วันลา',
-      value: count((d) => d.leave?.status === LEAVE_STATUS.APPROVED),
-      bg: 'bg-metric-blue/10',
-      color: 'text-metric-blue',
-    },
-    { label: 'มาสาย', value: count((d) => d.attendance === 'late'), bg: 'bg-status-checkout/10', color: 'text-status-checkout' },
-    {
-      label: 'ขาด/ไม่ครบ',
-      value: count((d) => ['missing', 'incomplete'].includes(d.attendance)),
-      bg: 'bg-status-outside/10',
-      color: 'text-status-outside',
-    },
-  ]
-})
 
 function ariaLabel(day) {
   const parts = [formatThaiDate(day.date)]

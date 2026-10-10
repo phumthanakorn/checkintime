@@ -19,16 +19,30 @@
   --font-sans: 'Prompt', 'Noto Sans Thai', sans-serif;
   --font-display: 'Plus Jakarta Sans', 'Prompt', sans-serif;
 
-  /* A. สีประจำสถานะเช็คอิน (Card Status Palette) */
-  --color-status-checkin: #10b981; /* Emerald 500 — กดเข้างาน */
-  --color-status-checkout: #f59e0b; /* Amber 500 — กดออกงาน */
-  --color-status-outside: #f95738; /* Coral Flame — อยู่นอกพื้นที่ */
+  /* A. สีประจำสถานะเช็คอิน (Card Status Palette) — v2: รีแบรนด์เป็นส้ม/กรมท่า
+     ส้ม (brand/primary) ใช้เป็นสีเดียวกันทั้งปุ่ม CTA หลัก, active tab และสถานะ "เข้างาน"
+     ตั้งใจให้เป็นสีเดียวกันตามที่ตกลงไว้ ไม่แยก brand color ออกจาก status color */
+  --color-status-checkin: #fd7e14; /* ส้ม (เดิม Emerald #10b981) — กดเข้างาน + สีหลักของแอป */
+  --color-status-checkout: #f59e0b; /* Amber 500 — ใช้เป็นสี warning/amber ทั่วแอป (badge เตือน, แถบรหัสผ่าน
+     ฯลฯ) ไม่ใช่แค่การ์ด "กดออกงาน" ห้ามเปลี่ยนค่านี้เพื่อแก้สีการ์ดออกงานโดยเฉพาะ — ไปแก้ action-checkout แทน */
+  --color-status-outside: #dc2626; /* แดง — อยู่นอกพื้นที่ (เดิม Coral #f95738 ใกล้สีส้มใหม่เกินไป แยกไม่ออก) */
   --color-status-done: #334155; /* Slate Dark 700 — เช็คอินครบแล้ว */
+  /* สีการ์ด "กดออกงาน" บนหน้าหลักโดยเฉพาะ (CheckInCard.vue) แยกจาก status-checkout เพราะตัวนั้นถูกใช้เป็นสี
+     warning/amber ทั่วทั้งแอปอยู่แล้ว (ถ้าใช้ตัวเดียวกันจะไปกระทบ badge เตือน/แถบรหัสผ่านโดยไม่ตั้งใจ) ใช้
+     กรมท่าเข้ม (เดียวกับ primary-dark) ให้ตัดกับส้มของ checkin ชัดเจน แทน Amber เดิมที่สีใกล้ส้มเกินไปจนแยกยาก */
+  --color-action-checkout: #1e293b;
+  /* สีการ์ด "ลงเวลาครบแล้ว" บนหน้าหลักโดยเฉพาะ (CheckInCard.vue + TodayAttendanceCard.vue) แยกจาก
+     status-done เพราะตัวนั้นถูกใช้เป็นสีเทาเข้มกลางๆ ทั่วแอปอยู่แล้ว (ไอคอน offline, globe, mobile ฯลฯ) —
+     ถ้าใช้ตัวเดียวกันจะไปชนกับ action-checkout (ก็กรมท่าเข้มใกล้เคียงกันมาก #1e293b vs #334155) แยกยากบนจอเล็ก
+     เหมือนที่ checkin/checkout เคยชนกันมาก่อน ใช้เขียว (ความหมาย "เสร็จสมบูรณ์") แทน ให้ต่างจากทุกสีที่มีอยู่ */
+  --color-action-done: #059669;
 
   /* B. สีโครงสร้างและไอคอนข้อมูลสถิติ (UI & Supporting Colors) */
-  --color-app-bg: #f8faff; /* พื้นหลังทั้งแอป */
+  --color-primary-dark: #1e293b; /* กรมท่าเข้ม (secondary brand) — ส่วนโครงสร้างเข้ม เช่น header/footer เข้ม */
+  --color-primary-light: #ffedd5; /* ส้มอ่อน — พื้นหลังไฮไลต์หลัง active icon/badge */
+  --color-app-bg: #fff8f2; /* พื้นหลังทั้งแอป (เดิม #f8faff ออกฟ้า เปลี่ยนเป็นโทนอุ่นรับกับส้ม) */
   --color-card: #ffffff; /* การ์ดสถิติ/รายการ */
-  --color-ink: #0f172a; /* หัวข้อ/ชื่อพนักงาน */
+  --color-ink: #1e293b; /* หัวข้อ/ชื่อพนักงาน (เดิม #0f172a — เปลี่ยนให้เป็นสีเดียวกับ primary-dark) */
   --color-ink-muted: #64748b; /* คำอธิบาย/วันที่ */
   --color-metric-blue: #3b82f6; /* วันลาคงเหลือ */
   --color-metric-cyan: #06b6d4; /* สถิติ OT รายเดือน */

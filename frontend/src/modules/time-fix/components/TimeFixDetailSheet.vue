@@ -19,7 +19,7 @@
         </div>
       </dl>
 
-      <AttachmentList :files="request.attachments" class="mt-4" />
+      <TimeFixAttachments :request-id="request.id" :files="request.attachments" class="mt-4" />
 
       <div
         v-if="request.reviewNote"
@@ -51,7 +51,7 @@
 import { computed } from 'vue'
 import AppBottomSheet from '@/components/common/AppBottomSheet.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
-import AttachmentList from '@/components/common/AttachmentList.vue'
+import TimeFixAttachments from './TimeFixAttachments.vue'
 import { REQUEST_STATUS, REQUEST_STATUS_META, TIME_FIX_TYPE_LABELS } from '@/utils/constants'
 import { formatDayMonth, formatThaiDate } from '@/utils/formatters'
 

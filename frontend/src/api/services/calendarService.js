@@ -1,6 +1,4 @@
 import axiosClient from '@/api/axiosClient'
-import { mockCalendar } from '@/api/mock/mockServer'
-import { USE_MOCK } from '@/utils/constants'
 
 const httpCalendar = {
   /**
@@ -12,4 +10,4 @@ const httpCalendar = {
   getMonth: (params) => axiosClient.get('/calendar', { params }),
 }
 
-export const calendarService = USE_MOCK ? mockCalendar : httpCalendar
+export const calendarService = httpCalendar

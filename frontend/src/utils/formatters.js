@@ -23,6 +23,44 @@ export function formatClock(date) {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
+// ลำดับเช็คก่อน-หลังมีผล (เช่น Chrome ต้องเช็คก่อน Safari เพราะ Chrome บน iOS ก็มีคำว่า "Safari" ติดอยู่ใน
+// user agent ด้วยเสมอ) — ครอบคลุมแค่กรณีที่เจอบ่อยในองค์กรนี้ (LINE in-app browser สำคัญเพราะพนักงานหลายคน
+// เปิดผ่าน LINE OA) ไม่ได้ตั้งใจแม่นยำ 100% แค่พอให้คนอ่านเข้าใจง่ายกว่า user agent ดิบๆ
+const OS_PATTERNS = [
+  [/iPhone/i, 'iPhone'],
+  [/iPad/i, 'iPad'],
+  [/Android/i, 'Android'],
+  [/Windows/i, 'Windows'],
+  [/Macintosh|Mac OS X/i, 'Mac'],
+  [/Linux/i, 'Linux'],
+]
+const BROWSER_PATTERNS = [
+  [/Line\//i, 'LINE'],
+  [/EdgA?\//i, 'Edge'],
+  [/SamsungBrowser\//i, 'Samsung Internet'],
+  [/CriOS\//i, 'Chrome'], // Chrome บน iOS ชื่อ build ต่างจาก Android/desktop
+  [/Chrome\//i, 'Chrome'],
+  [/FxiOS\//i, 'Firefox'],
+  [/Firefox\//i, 'Firefox'],
+  [/Version\/.*Safari/i, 'Safari'], // ต้องเช็คหลัง Chrome/CriOS เสมอ (ดูคอมเมนต์ด้านบน)
+]
+
+/** แปลง user agent ดิบๆ เป็นข้อความสั้นอ่านง่าย เช่น "iPhone · Safari" — คืนค่าตัดทอนของ UA เดิมถ้าจับรูปแบบไม่ได้ */
+export function formatDeviceLabel(userAgent) {
+  if (!userAgent) return null
+  const os = OS_PATTERNS.find(([re]) => re.test(userAgent))?.[1]
+  const browser = BROWSER_PATTERNS.find(([re]) => re.test(userAgent))?.[1]
+  if (os && browser) return `${os} · ${browser}`
+  if (os || browser) return os || browser
+  return userAgent.length > 40 ? `${userAgent.slice(0, 40)}…` : userAgent
+}
+
+/** วินาทีปัจจุบัน 2 หลัก เช่น '07' — ใช้คู่กับ formatClock() ต่อท้ายเป็นตัวเล็ก (นาฬิกาหน้าหลัก) */
+export function formatSeconds(date) {
+  if (!date) return '--'
+  return pad(new Date(date).getSeconds())
+}
+
 /** 'ศุกร์ 17 ก.ค. 2569' */
 export function formatThaiDate(date = new Date()) {
   const d = toDate(date)

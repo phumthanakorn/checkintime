@@ -106,7 +106,7 @@ const emit = defineEmits(['accept'])
 const SUMMARY = [
   {
     title: 'ข้อมูลที่ใช้',
-    body: 'ข้อมูลพนักงาน เวลาเข้า-ออกงาน การลา และเงินเดือน เท่าที่จำเป็นต่อการทำงาน',
+    body: 'ข้อมูลพนักงาน เวลาเข้า-ออกงาน และการลา เท่าที่จำเป็นต่อการทำงาน',
     icon: 'id-card',
     bg: 'bg-metric-blue/10',
     color: 'text-metric-blue',

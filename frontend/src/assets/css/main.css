@@ -2,13 +2,26 @@ html,
 body,
 .v-application {
   font-family: 'Prompt', 'Noto Sans Thai', sans-serif;
-  color: #0f172a;
+  color: #1e293b;
 }
 
 .v-application {
-  background: #f8faff !important;
+  background: #fff8f2 !important;
 }
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* iOS Safari จะ auto-zoom เข้าทุกครั้งที่ focus input/textarea/select ที่ font-size คำนวณออกมาต่ำกว่า 16px
+   (ถือว่าตัวอักษรเล็กไปจนอ่านไม่ได้ตอนพิมพ์) — ฟอร์มในแอปนี้ส่วนใหญ่ใช้ text-sm (14px) ตาม design ปกติ ซึ่ง
+   ชนเกณฑ์นี้พอดี บังคับ 16px เฉพาะตอน focus ให้พ้นเกณฑ์ ไม่โดน auto-zoom แต่ยังโชว์ font-size เดิม (14px)
+   ตามปกติตอนไม่ได้ focus อยู่ — ใช้ !important เพราะ class ของ Tailwind (เช่น .text-sm) specificity สูงกว่า
+   element selector ธรรมดา ไม่งั้นโดนทับ */
+@media (max-width: 767px) {
+  input:focus,
+  textarea:focus,
+  select:focus {
+    font-size: 16px !important;
+  }
 }

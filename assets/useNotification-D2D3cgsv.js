@@ -1,0 +1,1 @@
+import{bH as i}from"./index-DSuz_q7E.js";function c(){const r=i(),o=s=>(n,t)=>r.pushToast({type:s,message:n,timeout:t});return{success:o("success"),error:o("error"),warning:o("warning"),info:o("info")}}export{c as u};

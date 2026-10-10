@@ -1,6 +1,4 @@
 import axiosClient from '@/api/axiosClient'
-import { mockAttendance } from '@/api/mock/mockServer'
-import { USE_MOCK } from '@/utils/constants'
 
 const httpAttendance = {
   /** รายการลงเวลาของวันนี้ของผู้ใช้ปัจจุบัน (null ถ้ายังไม่ลงเวลา) */
@@ -16,4 +14,4 @@ const httpAttendance = {
   getHistory: (params) => axiosClient.get('/attendance/history', { params }),
 }
 
-export const attendanceService = USE_MOCK ? mockAttendance : httpAttendance
+export const attendanceService = httpAttendance

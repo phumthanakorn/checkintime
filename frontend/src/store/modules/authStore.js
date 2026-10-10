@@ -32,8 +32,36 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem(STORAGE_KEYS.USER)
   }
 
+  // login ครั้งแรก (ยังไม่เคยตั้งรหัสผ่าน หรือ HR รีเซ็ตให้) backend จะไม่ออก token/user ทันที แต่คืน
+  // {needsSetup:true, empcode} แทน ให้ผู้เรียก (useAuth/LoginView) พาไปหน้าตั้งรหัสผ่านใหม่ต่อแทนที่จะ login
+  // สำเร็จเลย — ไม่เรียก setSession() ในเคสนี้
   async function login(credentials) {
-    const { token: newToken, user: newUser } = await authService.login(credentials)
+    const res = await authService.login(credentials)
+    if (res?.needsSetup) return res
+    setSession(res.token, res.user)
+    return res.user
+  }
+
+  // ตั้งรหัสผ่านใหม่ (ครั้งแรก/HR รีเซ็ตให้) สำเร็จแล้ว backend ออก token/user ให้เข้าสู่ระบบอัตโนมัติเหมือน
+  // login ปกติ — ไม่ต้องให้กรอก login ซ้ำอีกรอบ
+  async function setupPassword(payload) {
+    const { token: newToken, user: newUser } = await authService.setupPassword(payload)
+    setSession(newToken, newUser)
+    return newUser
+  }
+
+  // เข้าสู่ระบบด้วย Google — เหมือน login() ปกติ: backend อาจคืน {needsSetup:true} ถ้ายังไม่เคยตั้งรหัสผ่าน
+  // (Google login ไม่ใช่ทางลัดข้ามการตั้งรหัสผ่านครั้งแรก ดู AuthController::googleLogin())
+  async function googleLogin(credential) {
+    const res = await authService.googleLogin({ credential })
+    if (res?.needsSetup) return res
+    setSession(res.token, res.user)
+    return res.user
+  }
+
+  // ตั้งรหัสผ่านใหม่จากลิงก์อีเมล (token) สำเร็จแล้ว backend ออก token/user ให้เข้าสู่ระบบอัตโนมัติเหมือนกัน
+  async function resetPassword(payload) {
+    const { token: newToken, user: newUser } = await authService.resetPassword(payload)
     setSession(newToken, newUser)
     return newUser
   }
@@ -45,16 +73,9 @@ export const useAuthStore = defineStore('auth', () => {
     return freshUser
   }
 
-  async function loginWithPin(credentials) {
-    const { token: newToken, user: newUser } = await authService.loginWithPin(credentials)
-    setSession(newToken, newUser)
-    return newUser
-  }
-
   async function updateProfile(payload) {
     const updated = await authService.updateProfile(payload)
     setSession(token.value, updated)
-    rememberPinUser()
     return updated
   }
 
@@ -62,25 +83,6 @@ export const useAuthStore = defineStore('auth', () => {
     const updated = await authService.acceptConsent(payload)
     setSession(token.value, updated)
     return updated
-  }
-
-  /** ตั้ง PIN และจำบัญชีไว้บนเครื่องนี้ (หน้า login จะมีปุ่มเข้าด้วย PIN) */
-  async function setPin(pin) {
-    await authService.setPin({ pin })
-    setSession(token.value, { ...user.value, hasPin: true })
-    rememberPinUser()
-  }
-
-  async function removePin() {
-    await authService.removePin()
-    setSession(token.value, { ...user.value, hasPin: false })
-    localStorage.removeItem(STORAGE_KEYS.PIN_USER)
-  }
-
-  function rememberPinUser() {
-    if (!user.value?.hasPin) return
-    const { employeeCode, name, avatarUrl } = user.value
-    localStorage.setItem(STORAGE_KEYS.PIN_USER, JSON.stringify({ employeeCode, name, avatarUrl }))
   }
 
   async function logout() {
@@ -99,12 +101,12 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     role,
     login,
-    loginWithPin,
+    googleLogin,
+    setupPassword,
+    resetPassword,
     refreshUser,
     updateProfile,
     acceptConsent,
-    setPin,
-    removePin,
     logout,
     clearSession,
   }

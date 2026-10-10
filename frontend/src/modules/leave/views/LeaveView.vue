@@ -1,14 +1,7 @@
 <template>
   <div class="space-y-5">
-    <PageHeader title="การลา" :subtitle="`วันลาคงเหลือปี ${new Date().getFullYear() + 543}`">
-      <template #actions>
-        <router-link
-          :to="{ name: 'calendar', query: { from: 'leave' } }"
-          class="flex h-10 w-10 items-center justify-center rounded-full bg-card text-ink no-underline shadow-sm"
-          aria-label="ปฏิทินของฉัน"
-        >
-          <AppIcon name="calendar-dots" :size="20" class="text-metric-blue" />
-        </router-link>
+    <PageHeader title="การลา" :subtitle="LEAVE_ENABLED ? `วันลาคงเหลือปี ${new Date().getFullYear() + 543}` : undefined">
+      <template v-if="LEAVE_ENABLED" #actions>
         <button
           type="button"
           class="flex h-10 items-center gap-1 rounded-full bg-status-checkin px-4 text-sm font-semibold text-white shadow-md shadow-status-checkin/30"
@@ -20,6 +13,16 @@
       </template>
     </PageHeader>
 
+    <section v-if="!LEAVE_ENABLED" class="flex min-h-[280px] flex-col items-center justify-center rounded-3xl bg-card px-6 py-10 text-center shadow-sm" role="status">
+      <span class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-status-checkin/10 text-status-checkin">
+        <AppIcon name="calendar-check" :size="32" weight="duotone" />
+      </span>
+      <h2 class="text-base font-bold text-ink">การลาผ่านแอปยังไม่เปิดใช้งาน</h2>
+      <p class="mt-3 text-sm leading-relaxed text-ink-muted">ขณะนี้กรุณายื่นลาผ่านช่องทางเดิม<br />หากมีข้อสงสัย กรุณาติดต่อฝ่ายบุคคล (HR)</p>
+      <span class="mt-5 rounded-full bg-slate-100 px-3 py-1.5 text-xs text-ink-muted">รอเปิดให้บริการ</span>
+    </section>
+
+    <template v-else>
     <LeaveBalanceList :balances="leave.balances" />
 
     <section class="space-y-3">
@@ -44,9 +47,10 @@
         />
       </div>
     </section>
+    </template>
   </div>
 
-  <AppBottomSheet v-model="formOpen" title="ยื่นใบลา" :persistent="leave.submitting">
+  <AppBottomSheet v-if="LEAVE_ENABLED" v-model="formOpen" title="ยื่นใบลา" :persistent="leave.submitting">
     <LeaveRequestForm ref="formRef" :balances="leave.balances" @submit="submitRequest" />
     <template #footer>
       <button
@@ -64,9 +68,10 @@
     </template>
   </AppBottomSheet>
 
-  <LeaveDetailSheet v-model="detailOpen" :request="selected" :loading="leave.submitting" @cancel="confirmCancel = true" />
+  <LeaveDetailSheet v-if="LEAVE_ENABLED" v-model="detailOpen" :request="selected" :loading="leave.submitting" @cancel="confirmCancel = true" />
 
   <ConfirmModal
+    v-if="LEAVE_ENABLED"
     v-model="confirmCancel"
     title="ยกเลิกคำขอลา"
     message="ต้องการยกเลิกคำขอลานี้ใช่หรือไม่?"
@@ -92,7 +97,7 @@ import LeaveRequestForm from '../components/LeaveRequestForm.vue'
 import LeaveDetailSheet from '../components/LeaveDetailSheet.vue'
 import { useLeaveStore } from '@/store'
 import { useNotification } from '@/composables/useNotification'
-import { LEAVE_STATUS } from '@/utils/constants'
+import { LEAVE_ENABLED, LEAVE_STATUS } from '@/utils/constants'
 
 const leave = useLeaveStore()
 const notify = useNotification()
@@ -118,6 +123,7 @@ const filteredRequests = computed(() =>
 )
 
 onMounted(async () => {
+  if (!LEAVE_ENABLED) return
   try {
     await leave.fetchAll()
   } catch (error) {
@@ -126,6 +132,7 @@ onMounted(async () => {
 })
 
 function openForm() {
+  if (!LEAVE_ENABLED) return
   formRef.value?.reset()
   formOpen.value = true
 }
@@ -136,6 +143,7 @@ function openDetail(request) {
 }
 
 async function submitRequest(payload) {
+  if (!LEAVE_ENABLED) return
   try {
     await leave.createRequest(payload)
     formOpen.value = false
@@ -147,6 +155,7 @@ async function submitRequest(payload) {
 }
 
 async function cancelRequest() {
+  if (!LEAVE_ENABLED) return
   try {
     await leave.cancelRequest(selected.value.id)
     confirmCancel.value = false

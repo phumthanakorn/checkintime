@@ -6,6 +6,7 @@
  *  - skipConsent: เข้าได้แม้ยังไม่ยินยอม PDPA (หน้าอื่นที่ requiresAuth จะถูกพาไป onboarding ก่อน)
  *  - hideHeader: ซ่อนส่วนหัว (คำทักทาย) ของ MainLayout
  *  - tab: ชื่อ route ของแท็บด้านล่างที่ต้องไฮไลต์ (ใช้กับหน้าย่อย)
+ *  - https://claude.ai/artifact/67v7ZHBFDhjR6pymmDcq9R    หน้าตา Data Dictionar   ฝากไว้ 
  */
 const routes = [
   {
@@ -15,16 +16,16 @@ const routes = [
     meta: { layout: 'auth', guestOnly: true, title: 'เข้าสู่ระบบ' },
   },
   {
-    path: '/login/pin',
-    name: 'pin-login',
-    component: () => import('@/modules/auth/views/PinLoginView.vue'),
-    meta: { layout: 'auth', guestOnly: true, title: 'เข้าสู่ระบบด้วย PIN' },
-  },
-  {
     path: '/forgot-password',
     name: 'forgot-password',
     component: () => import('@/modules/auth/views/ForgotPasswordView.vue'),
     meta: { layout: 'auth', guestOnly: true, title: 'ลืมรหัสผ่าน' },
+  },
+  {
+    path: '/reset-password',
+    name: 'reset-password',
+    component: () => import('@/modules/auth/views/ResetPasswordView.vue'),
+    meta: { layout: 'auth', guestOnly: true, title: 'ตั้งรหัสผ่านใหม่' },
   },
   {
     path: '/onboarding',
@@ -33,16 +34,22 @@ const routes = [
     meta: { layout: 'auth', requiresAuth: true, skipConsent: true, title: 'เริ่มต้นใช้งาน' },
   },
   {
-    path: '/',
+    path: '/checkin',
     name: 'home',
     component: () => import('@/modules/home/views/HomeView.vue'),
     meta: { layout: 'main', requiresAuth: true, title: 'หน้าหลัก' },
+  },
+  // root "/" เป็นแค่ทางเข้าชั่วคราว redirect ไปหน้าหลัก ("home") จริงทันที — ไม่ใช้ path ว่างเป็นหน้าหลักเอง
+  // เหมือนเส้นทางอื่นในแอปที่มีชื่อ path สื่อความหมายทั้งหมด (/history, /leave, /me ฯลฯ)
+  {
+    path: '/',
+    redirect: { name: 'home' },
   },
   {
     path: '/history',
     name: 'history',
     component: () => import('@/modules/history/views/HistoryView.vue'),
-    meta: { layout: 'main', requiresAuth: true, hideHeader: true, title: 'ประวัติ' },
+    meta: { layout: 'main', requiresAuth: true, hideHeader: true, title: 'ปฏิทิน' },
   },
   {
     path: '/time-fix',
@@ -75,12 +82,6 @@ const routes = [
     meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'profile', title: 'เปลี่ยนรหัสผ่าน' },
   },
   {
-    path: '/me/pin',
-    name: 'profile-pin',
-    component: () => import('@/modules/profile/views/PinSettingsView.vue'),
-    meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'profile', title: 'PIN / Biometric' },
-  },
-  {
     path: '/me/settings',
     name: 'settings',
     component: () => import('@/modules/profile/views/SettingsView.vue'),
@@ -91,12 +92,6 @@ const routes = [
     name: 'privacy',
     component: () => import('@/modules/profile/views/PrivacyView.vue'),
     meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'profile', title: 'นโยบายความเป็นส่วนตัว' },
-  },
-  {
-    path: '/payslip',
-    name: 'payslip',
-    component: () => import('@/modules/payslip/views/PayslipView.vue'),
-    meta: { layout: 'main', requiresAuth: true, hideHeader: true, tab: 'profile', title: 'สลิปเงินเดือน' },
   },
   {
     path: '/notifications',

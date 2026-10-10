@@ -13,11 +13,12 @@
       <template #append>
         <button
           type="button"
-          class="text-slate-400"
+          class="shrink-0 rounded-lg text-slate-400"
+          style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; margin: 0; border: 0; background: transparent; line-height: 0; appearance: none"
           :aria-label="visible ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'"
           @click="visible = !visible"
         >
-          <AppIcon :name="visible ? 'eye-slash' : 'eye'" :size="20" />
+          <AppIcon :name="visible ? 'eye-slash' : 'eye'" :size="20" class="block shrink-0" />
         </button>
       </template>
     </TextField>

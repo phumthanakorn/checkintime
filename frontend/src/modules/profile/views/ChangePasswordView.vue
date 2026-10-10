@@ -9,6 +9,7 @@
         required
         autocomplete="current-password"
         :error="errors.current"
+        @focusout="verifyCurrent"
       />
       <PasswordField
         v-model="form.next"
@@ -17,7 +18,7 @@
         required
         show-strength
         autocomplete="new-password"
-        :error="errors.next"
+        :error="samePassword ? 'รหัสผ่านใหม่ต้องแตกต่างจากรหัสผ่านปัจจุบัน' : errors.next"
       />
       <PasswordField
         v-model="form.confirm"
@@ -44,7 +45,7 @@
       <button
         type="submit"
         class="flex h-12 w-full items-center justify-center rounded-2xl bg-status-checkin font-semibold text-white shadow-lg shadow-status-checkin/30 disabled:opacity-60"
-        :disabled="saving"
+        :disabled="saving || samePassword"
       >
         <LoadingDots v-if="saving" />
         <template v-else>เปลี่ยนรหัสผ่าน</template>
@@ -58,7 +59,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import PasswordField from '@/components/common/PasswordField.vue'
@@ -72,17 +73,51 @@ const router = useRouter()
 const form = reactive({ current: '', next: '', confirm: '' })
 const errors = reactive({ current: '', next: '', confirm: '' })
 const saving = ref(false)
+let verificationId = 0
+let checkedCurrent = null
+
+const samePassword = computed(() => !!form.current && !!form.next && form.current === form.next)
 
 const rules = computed(() => [
   { label: 'อย่างน้อย 8 ตัวอักษร', ok: form.next.length >= 8 },
   { label: 'มีตัวอักษรภาษาอังกฤษ', ok: /[A-Za-z]/.test(form.next) },
   { label: 'มีตัวเลข', ok: /\d/.test(form.next) },
+  { label: 'รหัสผ่านใหม่แตกต่างจากรหัสผ่านปัจจุบัน', ok: !!form.current && !!form.next && !samePassword.value },
   { label: 'รหัสผ่านใหม่ตรงกันทั้งสองช่อง', ok: !!form.next && form.next === form.confirm },
 ])
 
+watch(() => form.current, () => {
+  verificationId++
+  checkedCurrent = null
+  errors.current = ''
+}, { flush: 'sync' })
+
+watch(() => form.next, () => { errors.next = '' })
+
+async function verifyCurrent(event) {
+  // Moving to the show/hide button remains inside the same field.
+  if (event?.relatedTarget && event.currentTarget?.contains(event.relatedTarget)) return
+  if (saving.value || checkedCurrent === form.current) return
+  const password = form.current
+  if (!password) {
+    errors.current = 'กรุณากรอกรหัสผ่านปัจจุบัน'
+    return
+  }
+  const id = ++verificationId
+  try {
+    await authService.verifyCurrentPassword({ currentPassword: password })
+    if (id !== verificationId) return
+    checkedCurrent = password
+    errors.current = ''
+  } catch (error) {
+    if (id !== verificationId) return
+    if (error.data?.code === 'CURRENT_PASSWORD_INVALID') checkedCurrent = password
+    errors.current = error.message
+  }
+}
 function validate() {
-  errors.current = form.current ? '' : 'กรุณากรอกรหัสผ่านปัจจุบัน'
-  errors.next = validateNewPassword(form.next)
+  errors.current = form.current ? (checkedCurrent === form.current ? errors.current : '') : 'กรุณากรอกรหัสผ่านปัจจุบัน'
+  errors.next = samePassword.value ? 'รหัสผ่านใหม่ต้องแตกต่างจากรหัสผ่านปัจจุบัน' : validateNewPassword(form.next)
   errors.confirm = form.confirm === form.next ? '' : 'รหัสผ่านใหม่ไม่ตรงกัน'
   return !errors.current && !errors.next && !errors.confirm
 }
@@ -95,7 +130,7 @@ async function submit() {
     notify.success('เปลี่ยนรหัสผ่านเรียบร้อย')
     router.replace({ name: 'profile' })
   } catch (error) {
-    if (/ปัจจุบัน/.test(error.message)) errors.current = error.message
+    if (error.data?.code === 'CURRENT_PASSWORD_INVALID') errors.current = error.message
     else notify.error(error.message)
   } finally {
     saving.value = false

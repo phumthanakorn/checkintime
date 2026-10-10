@@ -6,32 +6,19 @@
         v-for="item in rows"
         :key="item.type"
         type="button"
-        class="flex w-full items-center gap-3 rounded-2xl bg-card p-4 text-left shadow-sm transition"
-        :class="item.available ? 'active:scale-[0.99]' : 'cursor-default'"
-        :aria-disabled="!item.available"
+        class="flex w-full items-center gap-3 rounded-2xl bg-card p-4 text-left shadow-sm transition active:scale-[0.99]"
         @click="emit('select', item.type)"
       >
-        <span
-          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-          :class="item.available ? item.bg : 'bg-slate-100'"
-        >
-          <AppIcon :name="item.icon" :size="22" weight="duotone" :class="item.available ? item.color : 'text-slate-400'" />
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" :class="item.bg">
+          <AppIcon :name="item.icon" :size="22" weight="duotone" :class="item.color" />
         </span>
         <span class="min-w-0 flex-1">
-          <span class="block text-sm font-semibold" :class="item.available ? 'text-ink' : 'text-ink-muted'">
-            {{ item.label }}
-          </span>
+          <span class="block text-sm font-semibold text-ink">{{ item.label }}</span>
           <span class="block text-xs" :class="item.pendingCount ? 'text-amber-600' : 'text-ink-muted'">
             {{ item.subtitle }}
           </span>
         </span>
-        <span
-          v-if="!item.available"
-          class="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-ink-muted"
-        >
-          เร็ว ๆ นี้
-        </span>
-        <AppIcon v-else name="caret-right" class="text-slate-300" />
+        <AppIcon name="caret-right" class="text-slate-300" />
       </button>
     </div>
   </section>
@@ -39,10 +26,10 @@
 
 <script setup>
 import { computed } from 'vue'
-import { FEATURES, REQUEST_TYPES } from '@/utils/constants'
+import { REQUEST_TYPES } from '@/utils/constants'
 
 const props = defineProps({
-  /** [{ type: 'leave' | 'advance', pendingCount: number }] */
+  /** [{ type: 'leave' | 'time_fix', pendingCount: number }] */
   items: { type: Array, default: () => [] },
 })
 
@@ -63,24 +50,15 @@ const META = {
     color: 'text-violet-500',
     available: true,
   },
-  [REQUEST_TYPES.ADVANCE]: {
-    label: 'การเบิกเงิน',
-    icon: 'wallet',
-    bg: 'bg-metric-blue/10',
-    color: 'text-metric-blue',
-    available: FEATURES.ADVANCE_REQUEST,
-  },
 }
 
-// แสดงทุกประเภทเสมอ แม้ API ยังไม่ส่งข้อมูลมา
 const rows = computed(() =>
-  Object.values(REQUEST_TYPES).map((type) => {
-    const meta = META[type]
-    const pendingCount = meta.available ? (props.items.find((i) => i.type === type)?.pendingCount ?? 0) : 0
-    let subtitle = 'ไม่มีรายการ'
-    if (!meta.available) subtitle = 'ยังไม่เปิดให้บริการ'
-    else if (pendingCount) subtitle = `รออนุมัติ ${pendingCount} รายการ`
-    return { type, pendingCount, subtitle, ...meta }
-  }),
+  Object.values(REQUEST_TYPES)
+    .map((type) => {
+      const meta = META[type]
+      const pendingCount = props.items.find((i) => i.type === type)?.pendingCount ?? 0
+      const subtitle = pendingCount ? `รออนุมัติ ${pendingCount} รายการ` : 'ไม่มีรายการ'
+      return { type, pendingCount, subtitle, ...meta }
+    }),
 )
 </script>

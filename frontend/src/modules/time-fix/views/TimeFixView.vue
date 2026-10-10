@@ -82,7 +82,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import SegmentedTabs from '@/components/common/SegmentedTabs.vue'
 import AppBottomSheet from '@/components/common/AppBottomSheet.vue'
@@ -99,7 +99,6 @@ import { REQUEST_STATUS, TIME_FIX_MAX_DAYS_BACK, TIME_FIX_TYPES } from '@/utils/
 const timeFix = useTimeFixStore()
 const notify = useNotification()
 const route = useRoute()
-const router = useRouter()
 
 const filter = ref('all')
 const formOpen = ref(false)
@@ -123,17 +122,21 @@ const filteredRequests = computed(() =>
 )
 
 onMounted(async () => {
-  try {
-    await timeFix.fetchAll()
-  } catch (error) {
-    notify.error(error.message)
-  }
-
-  // มาจากหน้าประวัติ: /time-fix?date=YYYY-MM-DD&type=check_out -> เปิดฟอร์มพร้อมเติมค่า
+  // เปิดฟอร์มทันทีเฉพาะเมื่อมีวันที่จากปฏิทิน ไม่ต้องรอโหลดรายการคำขอ
   const { date, type } = route.query
   if (typeof date === 'string') {
     openForm({ date, fixType: Object.values(TIME_FIX_TYPES).includes(type) ? type : TIME_FIX_TYPES.BOTH })
-    router.replace({ query: {} })
+    // คง query ไว้: App.vue ใช้ route.fullPath เป็น key การล้าง query จะ remount และทำวันที่หาย
+  }
+
+  try {
+    await timeFix.fetchAll()
+    if (typeof route.query.request === 'string' && /^\d+$/.test(route.query.request)) {
+      const request = timeFix.requests.find((item) => String(item.id) === route.query.request)
+      if (request) openDetail(request)
+    }
+  } catch (error) {
+    notify.error(error.message)
   }
 })
 

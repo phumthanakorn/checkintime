@@ -87,8 +87,9 @@ import { formatClock, formatDuration, formatThaiDate } from '@/utils/formatters'
 
 /**
  * variant:
- *  - 'checkin-ontime'  เข้างานตรงเวลา (สีเขียว + กระดาษสี)
- *  - 'checkin-late'    เข้างานสาย (สีส้ม)
+ *  - 'checkin-ontime'  ลงเวลาเข้างานสำเร็จ (สีเขียว + กระดาษสี) — ไม่มีการเช็คสาย/ปกติแล้ว ใช้ชื่อ variant
+ *                      เดิมไว้เพื่อลดจุดแก้โค้ด แต่ข้อความที่แสดงเปลี่ยนเป็นกลางๆ ไม่บอกว่า "ตรงเวลา"
+ *  - 'checkin-late'    เหลือไว้ในโค้ดเผื่ออนาคต แต่ตอนนี้ไม่มีทางถูกเรียกจากข้อมูลจริงแล้ว (lateMinutes = 0 เสมอ)
  *  - 'checkout'        ออกงาน (สีเข้ม)
  */
 const open = defineModel({ type: Boolean, default: false })
@@ -108,7 +109,7 @@ const config = computed(
         bg: 'bg-status-checkin',
         iconColor: 'text-status-checkin',
         icon: 'check',
-        title: 'เข้างานตรงเวลา',
+        title: 'ลงเวลาเข้างานสำเร็จ',
         message: 'ขอให้เป็นวันที่ดีนะ ✨',
         confetti: true,
       },

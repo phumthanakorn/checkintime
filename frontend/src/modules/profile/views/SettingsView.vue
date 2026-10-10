@@ -4,7 +4,7 @@
 
     <!-- การแจ้งเตือน -->
     <section>
-      <h2 class="mb-2 px-1 text-[13px] font-semibold text-ink-muted">การแจ้งเตือน</h2>
+      <h2 class="mb-2 px-1 text-[13px] font-semibold text-primary-dark">การแจ้งเตือน</h2>
       <div class="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-card shadow-sm">
         <div class="setting-row">
           <span class="icon bg-rose-50"><AppIcon name="bell" weight="duotone" class="text-rose-500" /></span>
@@ -37,24 +37,9 @@
       </div>
     </section>
 
-    <!-- ความเป็นส่วนตัว -->
-    <section>
-      <h2 class="mb-2 px-1 text-[13px] font-semibold text-ink-muted">ความเป็นส่วนตัว</h2>
-      <div class="overflow-hidden rounded-2xl bg-card shadow-sm">
-        <div class="setting-row">
-          <span class="icon bg-metric-blue/10"><AppIcon name="eye-slash" weight="duotone" class="text-metric-blue" /></span>
-          <span class="min-w-0 flex-1">
-            <span class="block text-sm font-medium text-ink">ซ่อนยอดเงินในสลิป</span>
-            <span class="block text-xs text-ink-muted">แสดงเป็น •••••• จนกว่าจะกดดู</span>
-          </span>
-          <ToggleSwitch v-model="hideAmounts" label="ซ่อนยอดเงินในสลิป" />
-        </div>
-      </div>
-    </section>
-
     <!-- เกี่ยวกับแอป -->
     <section>
-      <h2 class="mb-2 px-1 text-[13px] font-semibold text-ink-muted">เกี่ยวกับแอป</h2>
+      <h2 class="mb-2 px-1 text-[13px] font-semibold text-primary-dark">เกี่ยวกับแอป</h2>
       <div class="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-card shadow-sm">
         <div class="setting-row">
           <span class="icon bg-slate-100"><AppIcon name="globe" weight="duotone" class="text-status-done" /></span>
@@ -66,40 +51,20 @@
           <span class="flex-1 text-sm font-medium text-ink">เวอร์ชัน</span>
           <span class="font-display text-sm text-ink-muted">{{ APP_VERSION }}</span>
         </div>
-        <button v-if="USE_MOCK" type="button" class="setting-row w-full text-left" @click="confirmReset = true">
-          <span class="icon bg-status-outside/10"><AppIcon name="reset" weight="duotone" class="text-status-outside" /></span>
-          <span class="min-w-0 flex-1">
-            <span class="block text-sm font-medium text-status-outside">รีเซ็ตข้อมูลทดลอง</span>
-            <span class="block text-xs text-ink-muted">ล้างข้อมูลจำลองทั้งหมดแล้วเริ่มใหม่</span>
-          </span>
-        </button>
       </div>
     </section>
   </div>
 
-  <ConfirmModal
-    v-model="confirmReset"
-    title="รีเซ็ตข้อมูลทดลอง"
-    message="ข้อมูลการลงเวลา คำขอ และการตั้งค่าในโหมดทดลองจะถูกล้างทั้งหมด ต้องการรีเซ็ตใช่หรือไม่?"
-    confirm-text="รีเซ็ต"
-    color="error"
-    @confirm="resetMock"
-  />
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import ToggleSwitch from '@/components/common/ToggleSwitch.vue'
 import TimeField from '@/components/common/TimeField.vue'
-import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { useSettings } from '@/composables/useSettings'
-import { useAuth } from '@/composables/useAuth'
-import { APP_VERSION, STORAGE_KEYS, USE_MOCK } from '@/utils/constants'
+import { APP_VERSION } from '@/utils/constants'
 
 const settings = useSettings()
-const { logout } = useAuth()
-const confirmReset = ref(false)
 
 const reminders = [
   {
@@ -132,28 +97,6 @@ const reminders = [
   },
 ]
 
-const hideAmounts = ref(readHide())
-function readHide() {
-  try {
-    return localStorage.getItem(STORAGE_KEYS.HIDE_AMOUNTS) === '1'
-  } catch {
-    return false
-  }
-}
-watch(hideAmounts, (value) => {
-  try {
-    localStorage.setItem(STORAGE_KEYS.HIDE_AMOUNTS, value ? '1' : '0')
-  } catch {
-    // ไม่เป็นไร
-  }
-})
-
-async function resetMock() {
-  localStorage.removeItem(STORAGE_KEYS.MOCK_DB)
-  localStorage.removeItem(STORAGE_KEYS.PIN_USER)
-  confirmReset.value = false
-  await logout()
-}
 </script>
 
 <style scoped>

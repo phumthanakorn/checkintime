@@ -1,41 +1,28 @@
 <template>
   <form class="space-y-4" novalidate @submit.prevent="handleSubmit">
     <div>
-      <label for="username" class="mb-2 block text-sm font-medium text-ink">รหัสพนักงาน หรือ อีเมล</label>
+      <label for="username" class="mb-2 block text-sm font-medium text-ink">อีเมล</label>
       <div class="field" :class="{ 'field--error': errors.username }">
         <AppIcon name="user" :size="20" class="text-slate-400" />
         <input
           id="username"
           v-model.trim="form.username"
-          type="text"
+          type="email"
           autocomplete="username"
-          placeholder="เช่น EMP-2569001 หรือชื่อผู้ใช้"
+          placeholder="อีเมลที่ลงทะเบียนไว้กับฝ่ายบุคคล"
         />
       </div>
       <p v-if="errors.username" class="mt-1 text-xs text-red-500">{{ errors.username }}</p>
     </div>
 
     <div>
-      <label for="password" class="mb-2 block text-sm font-medium text-ink">รหัสผ่าน</label>
-      <div class="field" :class="{ 'field--error': errors.password }">
-        <AppIcon name="lock-open" :size="20" class="text-slate-400" />
-        <input
-          id="password"
-          v-model="form.password"
-          :type="showPassword ? 'text' : 'password'"
-          autocomplete="current-password"
-          placeholder="กรอกรหัสผ่านของคุณ"
-        />
-        <button
-          type="button"
-          class="text-slate-400"
-          :aria-label="showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'"
-          @click="showPassword = !showPassword"
-        >
-          <AppIcon :name="showPassword ? 'eye-slash' : 'eye'" :size="20" />
-        </button>
-      </div>
-      <p v-if="errors.password" class="mt-1 text-xs text-red-500">{{ errors.password }}</p>
+      <PasswordField
+        v-model="form.password"
+        label="รหัสผ่าน"
+        icon="lock-open"
+        placeholder="กรอกรหัสผ่านของคุณ"
+        :error="errors.password"
+      />
     </div>
 
     <div class="flex items-center justify-between text-sm">
@@ -49,7 +36,7 @@
     <button
       type="submit"
       :disabled="loading"
-      class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-status-checkin font-semibold text-white shadow-lg shadow-status-checkin/30 transition hover:brightness-95 disabled:opacity-70"
+      class="login-submit flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-status-checkin font-semibold text-white shadow-lg shadow-status-checkin/30 transition hover:brightness-95 disabled:opacity-70"
     >
       <LoadingDots v-if="loading" />
       <template v-else>
@@ -61,8 +48,9 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
-import { required } from '@/utils/validators'
+import { reactive } from 'vue'
+import { email as emailRule, required } from '@/utils/validators'
+import PasswordField from '@/components/common/PasswordField.vue'
 
 const props = defineProps({
   loading: { type: Boolean, default: false },
@@ -71,16 +59,22 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'forgot'])
 
-const showPassword = ref(false)
 const form = reactive({ username: props.initialUsername, password: '', remember: !!props.initialUsername })
 const errors = reactive({ username: '', password: '' })
 
+const requireUsername = required('กรุณากรอกอีเมล')
+const validateEmailFormat = emailRule()
 const rules = {
-  username: required('กรุณากรอกรหัสพนักงานหรืออีเมล'),
   password: required('กรุณากรอกรหัสผ่าน'),
 }
 
 function validate() {
+  // username: เช็คว่ากรอกหรือยังก่อน แล้วค่อยเช็ครูปแบบอีเมล (ระบบบังคับ login ด้วยอีเมลอย่างเดียวแล้ว
+  // ไม่รับรหัสพนักงานอีกต่อไป ดู AuthController::login())
+  const requiredResult = requireUsername(form.username)
+  const emailResult = requiredResult === true ? validateEmailFormat(form.username) : requiredResult
+  errors.username = emailResult === true ? '' : emailResult
+
   for (const key of Object.keys(rules)) {
     const result = rules[key](form[key])
     errors[key] = result === true ? '' : result
@@ -94,6 +88,8 @@ function handleSubmit() {
 </script>
 
 <style scoped>
+.login-submit { border:0; border-radius:0.75rem !important; }
+
 .field {
   display: flex;
   align-items: center;
@@ -107,8 +103,8 @@ function handleSubmit() {
 }
 
 .field:focus-within {
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgb(16 185 129 / 0.15);
+  border-color: #fd7e14;
+  box-shadow: 0 0 0 3px rgb(253 126 20 / 0.15);
   background: #fff;
 }
 
@@ -122,7 +118,7 @@ function handleSubmit() {
   outline: none;
   background: transparent;
   font-size: 0.875rem;
-  color: #0f172a;
+  color: #1e293b;
 }
 
 .field input::placeholder {

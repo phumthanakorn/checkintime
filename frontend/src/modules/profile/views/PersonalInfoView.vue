@@ -5,18 +5,7 @@
     <!-- รูปโปรไฟล์ -->
     <section class="flex flex-col items-center">
       <div class="relative">
-        <img
-          v-if="form.avatarUrl"
-          :src="form.avatarUrl"
-          alt="รูปโปรไฟล์"
-          class="h-24 w-24 rounded-full object-cover ring-4 ring-card shadow-md"
-        />
-        <span
-          v-else
-          class="flex h-24 w-24 items-center justify-center rounded-full bg-status-checkin/10 text-3xl font-bold text-status-checkin ring-4 ring-card shadow-md"
-        >
-          {{ getInitials(user?.name) }}
-        </span>
+        <EmployeeAvatar :src="form.avatarUrl" :name="user?.name || ''" :size="96" class="ring-4 ring-card shadow-md" />
         <label
           class="absolute -bottom-1 -right-1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-status-checkin text-white shadow-md ring-2 ring-card"
           aria-label="เปลี่ยนรูปโปรไฟล์"
@@ -47,7 +36,7 @@
       <dl class="divide-y divide-slate-100">
         <div v-for="row in employeeRows" :key="row.label" class="flex justify-between gap-4 py-2.5 text-sm">
           <dt class="text-ink-muted">{{ row.label }}</dt>
-          <dd class="text-right font-medium text-ink" :class="row.display && 'font-display'">{{ row.value }}</dd>
+          <dd class="text-right font-medium text-ink">{{ row.value }}</dd>
         </div>
       </dl>
     </section>
@@ -106,13 +95,14 @@
 </template>
 
 <script setup>
+import EmployeeAvatar from '@/components/common/EmployeeAvatar.vue'
 import { computed, reactive, ref } from 'vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import TextField from '@/components/common/TextField.vue'
 import { useAuthStore } from '@/store'
 import { useNotification } from '@/composables/useNotification'
 import { compressImage } from '@/utils/files'
-import { formatDayMonth, formatTenure, getInitials } from '@/utils/formatters'
+import { formatDayMonth, formatTenure } from '@/utils/formatters'
 import { isEmail, isPhone } from '@/utils/validators'
 
 const auth = useAuthStore()
@@ -139,9 +129,9 @@ const dirty = computed(() => Object.keys(form).some((k) => form[k] !== original.
 
 const employeeRows = computed(() => [
   { label: 'ชื่อ-สกุล', value: user.value?.name },
-  { label: 'รหัสพนักงาน', value: user.value?.employeeCode, display: true },
-  { label: 'ตำแหน่ง', value: user.value?.position },
+  { label: 'รหัสพนักงาน', value: user.value?.employeeCode },
   { label: 'แผนก', value: user.value?.department || '-' },
+  { label: 'ตำแหน่ง', value: user.value?.position },
   {
     label: 'วันเริ่มงาน',
     value: user.value?.startDate

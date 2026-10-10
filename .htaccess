@@ -1,0 +1,23 @@
+# จำลอง nginx try_files ของ prod (ดู nginx location /checkin/ ที่เตรียมไว้) — ไฟล์นี้ไว้
+# ทดสอบ build จริงบน local เท่านั้น ไม่ได้เอาขึ้น prod (prod ใช้ nginx ไม่ใช่ Apache)
+#
+# security headers พื้นฐานสำหรับหน้าเว็บ (ของฝั่ง API อยู่ใน backend/router.php แยกต่างหากแล้ว เพราะไฟล์นี้
+# ไม่มีผลกับ response จาก PHP) — ย้ายไปใส่ใน nginx config จริงตอนขึ้น prod ด้วย (ดู docs/production-checklist.md)
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /checkin/
+
+    # ถ้า request ตรงกับไฟล์/โฟลเดอร์จริง (เช่น assets/, favicon.svg) ให้เสิร์ฟตามปกติ
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # นอกนั้นทั้งหมด (เส้นทางที่ Vue Router คุมเอง) ส่งกลับไปที่ index.html เสมอ
+    RewriteRule ^ index.html [L]
+</IfModule>

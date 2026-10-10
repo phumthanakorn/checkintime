@@ -73,7 +73,7 @@ const id = useId()
   padding: 0 1rem;
   border: 1px solid #e2e8f0;
   border-radius: 0.75rem;
-  background: #f8faff;
+  background: #fff8f2;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
@@ -82,13 +82,13 @@ const id = useId()
 }
 
 .field:focus-within {
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgb(16 185 129 / 0.15);
+  border-color: #fd7e14;
+  box-shadow: 0 0 0 3px rgb(253 126 20 / 0.15);
   background: #fff;
 }
 
 .field--error {
-  border-color: #f95738;
+  border-color: #dc2626;
 }
 
 .field--readonly {
@@ -102,7 +102,7 @@ const id = useId()
   outline: none;
   background: transparent;
   font-size: 0.875rem;
-  color: #0f172a;
+  color: #1e293b;
 }
 
 .field textarea {

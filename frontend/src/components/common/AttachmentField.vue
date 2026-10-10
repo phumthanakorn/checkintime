@@ -8,12 +8,14 @@
       <span class="font-display text-xs text-ink-muted">{{ model.length }}/{{ max }}</span>
     </div>
 
-    <div class="grid grid-cols-3 gap-2">
+    <!-- flex + ขนาดคงที่ (ไม่ใช่ grid-cols-3) เพราะ max ปรับได้ตามหน้าที่เรียกใช้ (เช่น time-fix ใช้ max=1) —
+    grid-cols ตายตัวจะทำให้ max=1 ได้ช่องยืดเต็มความกว้าง ดูไม่สมส่วน -->
+    <div class="flex flex-wrap gap-2">
       <!-- ไฟล์ที่แนบแล้ว -->
       <div
         v-for="(file, index) in model"
         :key="file.id"
-        class="relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-app-bg"
+        class="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-app-bg"
       >
         <img v-if="isImage(file.type)" :src="file.dataUrl" :alt="file.name" class="h-full w-full object-cover" />
         <div v-else class="flex h-full flex-col items-center justify-center gap-1 p-2 text-center">
@@ -36,7 +38,7 @@
       <!-- ปุ่มเพิ่มไฟล์ -->
       <label
         v-if="model.length < max"
-        class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-slate-200 bg-app-bg text-ink-muted transition hover:border-status-checkin hover:text-status-checkin"
+        class="flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-slate-200 bg-app-bg text-ink-muted transition hover:border-status-checkin hover:text-status-checkin"
         :class="processing && 'pointer-events-none opacity-60'"
       >
         <LoadingDots v-if="processing" size="sm" class="text-status-checkin" />

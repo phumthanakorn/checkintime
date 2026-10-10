@@ -40,10 +40,19 @@ export const useAttendanceStore = defineStore('attendance', () => {
     summary.value = await attendanceService.getSummary({ month: toMonthKey() })
   }
 
-  async function checkIn(location = null) {
+  /**
+   * payload:
+   *  - location: { lat, lng, accuracy } | null — GPS จริงของเครื่อง ณ ตอนลงเวลา
+   *  - photo: dataURL ของภาพเซลฟี่ยืนยันตัวตน (จาก CameraCaptureModal)
+   *  - nearestLocation: { location, distance } | null — สถานที่ลงเวลาที่ระบบเดาว่าใกล้ที่สุด (จาก
+   *    useGeofence().nearest) คนละเรื่องกับ location ข้างบน (นึงคือ "เดาว่าใกล้ที่ไหน" อีกนึงคือพิกัดจริง)
+   *  - device: string — navigator.userAgent ของเครื่องที่ลงเวลา
+   * ฝั่งนี้แค่ส่งผ่านทั้งหมดไปให้ backend ตัดสินใจเองว่าจะเก็บ/ตรวจสอบยังไง
+   */
+  async function checkIn(payload = {}) {
     submitting.value = true
     try {
-      today.value = await attendanceService.checkIn({ location })
+      today.value = await attendanceService.checkIn(payload)
       await refreshSummary()
       return today.value
     } finally {
@@ -51,10 +60,10 @@ export const useAttendanceStore = defineStore('attendance', () => {
     }
   }
 
-  async function checkOut(location = null) {
+  async function checkOut(payload = {}) {
     submitting.value = true
     try {
-      today.value = await attendanceService.checkOut({ location })
+      today.value = await attendanceService.checkOut(payload)
       await refreshSummary()
       return today.value
     } finally {

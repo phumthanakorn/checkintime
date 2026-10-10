@@ -1,6 +1,6 @@
 <template>
   <section>
-    <h2 class="mb-2 px-1 text-[13px] font-semibold text-ink-muted">{{ title }}</h2>
+    <h2 class="mb-2 px-1 text-[13px] font-semibold text-primary-dark">{{ title }}</h2>
     <div class="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-card shadow-sm">
       <component
         :is="item.switch === undefined ? 'button' : 'label'"

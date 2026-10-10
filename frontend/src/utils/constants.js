@@ -1,26 +1,19 @@
 export const APP_NAME = 'CheckInTime'
 export const APP_VERSION = '1.0.0'
+// Enable after HR approves the leave feature.
+export const LEAVE_ENABLED = false
 export const HR_CONTACT_PHONE = '02-xxx-xxxx'
-
-export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 export const STORAGE_KEYS = {
   TOKEN: 'cit_token',
   USER: 'cit_user',
   REMEMBER_USERNAME: 'cit_remember_username',
-  NOTIFICATIONS: 'cit_notifications',
-  HIDE_AMOUNTS: 'cit_hide_amounts',
-  PIN_USER: 'cit_pin_user', // บัญชีที่ตั้ง PIN ไว้บนเครื่องนี้
   SETTINGS: 'cit_settings',
-  MOCK_DB: 'cit_mock_db',
 }
 
 // เวลาทำงาน
 export const WORK_START_TIME = '09:00'
 export const WORK_END_TIME = '18:00'
-export const LATE_GRACE_MINUTES = 0
-// ออกงานหลังเวลาเลิกงานอย่างน้อยกี่นาทีจึงนับเป็น OT
-export const OT_MIN_MINUTES = 30
 
 // พื้นที่ที่อนุญาตให้ลงเวลา (geofence)
 export const OFFICE_LOCATION = {
@@ -42,7 +35,6 @@ export const CLOCK_STATE = {
 export const REQUEST_TYPES = {
   LEAVE: 'leave',
   TIME_FIX: 'time_fix',
-  ADVANCE: 'advance',
 }
 
 // ---------- การลา ----------
@@ -106,11 +98,6 @@ export const LEAVE_PERIOD_LABELS = {
 
 // ---------- เปิด/ปิดฟีเจอร์ ----------
 
-/** ฟีเจอร์ที่ยังไม่เปิดให้บริการจะแสดงเมนูไว้ แต่มีป้าย "เร็ว ๆ นี้" และกดใช้งานไม่ได้ */
-export const FEATURES = {
-  ADVANCE_REQUEST: false, // เบิกเงิน: บริษัทยังไม่เปิดให้บริการ
-}
-
 // ---------- คำขอลงเวลาย้อนหลัง / แก้ไขเวลา ----------
 
 /** สถานะคำขอใช้ชุดเดียวกับการลา */
@@ -142,7 +129,6 @@ export const NOTIFICATION_TYPES = {
   TIME_FIX_APPROVED: 'time_fix_approved',
   TIME_FIX_REJECTED: 'time_fix_rejected',
   REMINDER: 'reminder',
-  PAYSLIP: 'payslip',
   ANNOUNCEMENT: 'announcement',
 }
 
@@ -153,26 +139,20 @@ export const NOTIFICATION_META = {
   [NOTIFICATION_TYPES.TIME_FIX_APPROVED]: { icon: 'clock-edit', bg: 'bg-violet-50', color: 'text-violet-500' },
   [NOTIFICATION_TYPES.TIME_FIX_REJECTED]: { icon: 'x-circle', bg: 'bg-status-outside/10', color: 'text-status-outside' },
   [NOTIFICATION_TYPES.REMINDER]: { icon: 'alarm', bg: 'bg-status-checkout/10', color: 'text-status-checkout' },
-  [NOTIFICATION_TYPES.PAYSLIP]: { icon: 'file-text', bg: 'bg-metric-blue/10', color: 'text-metric-blue' },
   [NOTIFICATION_TYPES.ANNOUNCEMENT]: { icon: 'megaphone', bg: 'bg-metric-cyan/10', color: 'text-metric-cyan' },
 }
-
-// ---------- สลิปเงินเดือน ----------
-
-/** วันที่จ่ายเงินเดือน (สลิปของเดือนจะออกวันนี้) */
-export const PAYDAY = 25
 
 // ---------- PDPA ----------
 
 /** เวอร์ชันนโยบายความเป็นส่วนตัว: เปลี่ยนค่านี้เมื่อแก้นโยบาย ผู้ใช้ทุกคนจะถูกขอความยินยอมใหม่ */
-export const PDPA_POLICY_VERSION = '2026-09-01'
-export const PDPA_UPDATED_AT = '1 ก.ย. 2569'
+export const PDPA_POLICY_VERSION = '2026-10-06'
+export const PDPA_UPDATED_AT = '6 ต.ค. 2569'
 
 // ---------- ปฏิทิน ----------
 
 /** สถานะการลงเวลาของแต่ละวันในปฏิทิน */
 export const DAY_STATUS_META = {
-  on_time: { label: 'ตรงเวลา', dot: 'bg-status-checkin' },
+  on_time: { label: 'ลงเวลาแล้ว', dot: 'bg-status-checkin' },
   late: { label: 'มาสาย', dot: 'bg-status-checkout' },
   incomplete: { label: 'ลงเวลาไม่ครบ', dot: 'bg-status-outside' },
   missing: { label: 'ขาดลงเวลา', dot: 'bg-status-outside' },

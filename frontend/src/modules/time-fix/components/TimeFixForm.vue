@@ -35,34 +35,21 @@
 
     <div>
       <span class="mb-2 block text-sm font-medium text-ink">เหตุผล <span class="text-status-outside">*</span></span>
-      <div class="mb-2 flex flex-wrap gap-2">
-        <button
-          v-for="reason in TIME_FIX_REASONS"
-          :key="reason"
-          type="button"
-          class="rounded-full border px-3 py-1.5 text-xs transition"
-          :class="
-            form.reason === reason
-              ? 'border-status-checkin bg-status-checkin/10 font-semibold text-status-checkin'
-              : 'border-slate-200 text-ink'
-          "
-          @click="form.reason = reason"
-        >
-          {{ reason }}
-        </button>
-      </div>
       <textarea
         v-model="form.reason"
         rows="2"
         maxlength="200"
-        placeholder="หรือพิมพ์เหตุผลเพิ่มเติม"
+        placeholder="กรุณาพิมพ์เหตุผลที่ขอลงเวลาย้อนหลัง"
         class="w-full resize-none rounded-xl border border-slate-200 bg-app-bg px-4 py-3 text-sm text-ink outline-none transition placeholder:text-slate-400 focus:border-status-checkin focus:bg-card"
       />
     </div>
 
     <AttachmentField
       v-model="form.attachments"
-      hint="เช่น รูปหน้าจอแชทงาน ใบนัดลูกค้า หรือหลักฐานการทำงาน"
+      :max="1"
+      :max-size-mb="5"
+      accept="image/jpeg,image/png,image/webp,application/pdf"
+      hint="รูป JPG, PNG, WEBP หรือ PDF · 1 ไฟล์ ไม่เกิน 5 MB · เช่น แชทงานหรือใบนัดลูกค้า"
     />
 
     <p class="flex items-start gap-1.5 rounded-2xl bg-metric-blue/10 px-3 py-2.5 text-xs text-metric-blue">
@@ -85,7 +72,6 @@ import SegmentedTabs from '@/components/common/SegmentedTabs.vue'
 import AttachmentField from '@/components/common/AttachmentField.vue'
 import {
   TIME_FIX_MAX_DAYS_BACK,
-  TIME_FIX_REASONS,
   TIME_FIX_TYPE_LABELS,
   TIME_FIX_TYPES,
   WORK_END_TIME,
